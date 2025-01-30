@@ -1,5 +1,6 @@
 from uuid import uuid4
 import pytest
+import asyncio
 
 
 async def test_update_user(client, create_user_in_database, get_user_from_database):
@@ -40,11 +41,6 @@ async def test_update_only_one_user(client, create_user_in_database, get_user_fr
         "surname": "surname1",
         "is_active": True
     }
-    user1_update_data = {
-        "name": "name",
-        "surname": "surname",
-        "email": "email@mail.ru"
-    }
     user2 = {
         "user_id": uuid4(),
         "name": "name2",
@@ -60,8 +56,15 @@ async def test_update_only_one_user(client, create_user_in_database, get_user_fr
         "is_active": True
     }
 
-    for user_data in [user1, user2, user3]:
-        await create_user_in_database(user_data)
+    user1_update_data = {
+        "name": "name",
+        "surname": "surname",
+        "email": "email@mail.ru"
+    }
+
+    created_request = [create_user_in_database(user_data) for user_data in [user1, user2, user3]]
+
+    await asyncio.gather(*created_request)
 
     resp = client.patch(f"/user/?user_id={user1['user_id']}",
                         json=user1_update_data)
@@ -100,35 +103,7 @@ async def test_update_only_one_user(client, create_user_in_database, get_user_fr
         {},
         422,
         {
-            "detail": [
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "name"
-                    ],
-                    "msg": "Field required",
-                    "input": {}
-                },
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "surname"
-                    ],
-                    "msg": "Field required",
-                    "input": {}
-                },
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "email"
-                    ],
-                    "msg": "Field required",
-                    "input": {}
-                }
-            ]
+            "detail": "At least one parameter for user update info should be proveded"
         }
     ),
     (
@@ -146,28 +121,6 @@ async def test_update_only_one_user(client, create_user_in_database, get_user_fr
         422,
         {
             "detail": [
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "name"
-                    ],
-                    "msg": "Field required",
-                    "input": {
-                        "email": "123"
-                    }
-                },
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "surname"
-                    ],
-                    "msg": "Field required",
-                    "input": {
-                        "email": "123"
-                    }
-                },
                 {
                     "type": "value_error",
                     "loc": [
@@ -188,28 +141,6 @@ async def test_update_only_one_user(client, create_user_in_database, get_user_fr
         422,
         {
             "detail": [
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "name"
-                    ],
-                    "msg": "Field required",
-                    "input": {
-                        "email": ""
-                    }
-                },
-                {
-                    "type": "missing",
-                    "loc": [
-                        "body",
-                        "surname"
-                    ],
-                    "msg": "Field required",
-                    "input": {
-                        "email": ""
-                    }
-                },
                 {
                     "type": "value_error",
                     "loc": [
@@ -312,15 +243,15 @@ async def test_update_user_not_found_error(client, create_user_in_database):
         "surname": "Ivanov",
         "email": "cheburek@kek.com",
     }
-    user_id = uuid4()
+    user_id_for_finding = uuid4()
     resp = client.patch(
-        f"/user/?user_id={user_id}",
+        f"/user/?user_id={user_id_for_finding}",
         json=user_data_updated,
     )
     assert resp.status_code == 404
     data_from_response = resp.json()
     assert data_from_response == {
-            "detail": f"User with id {user_id} not found."
+            "detail": f"User with id {user_id_for_finding} not found."
         }
     
 
@@ -341,38 +272,15 @@ async def test_update_user_dublicate_email_error(client, create_user_in_database
     }
     await create_user_in_database(user_data1)
     await create_user_in_database(user_data2)
-    user_data_updated = {
-        "email": "lol1@kek.com",
+    user_data_dublicate_email = {
+        "email": user_data2['email'],
     }
     resp = client.patch(
         f"/user/?user_id={user_data1['user_id']}",
-        json=user_data_updated,
+        json=user_data_dublicate_email,
     )
-    assert resp.status_code == 422
-    data_from_response = resp.json()
-    assert data_from_response == {
-        "detail": [
-            {
-            "type": "missing",
-            "loc": [
-                "body",
-                "name"
-            ],
-            "msg": "Field required",
-            "input": {
-                "email": f"{user_data_updated['email']}"
-            }
-            },
-            {
-            "type": "missing",
-            "loc": [
-                "body",
-                "surname"
-            ],
-            "msg": "Field required",
-            "input": {
-                "email": f"{user_data_updated['email']}"
-            }
-            }
-        ]
-        }
+    assert resp.status_code == 503
+    assert (
+        'duplicate key value violates unique constraint "users_email_key"'
+        in resp.json()['detail']
+    )

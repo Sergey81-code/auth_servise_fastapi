@@ -56,9 +56,9 @@ class UpdatedUserResponse(BaseModel):
 
 
 class UpdateUserRequest(BaseModel):
-    name: Optional[str]
-    surname: Optional[str]
-    email: Optional[EmailStr]
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
     @field_validator('name')

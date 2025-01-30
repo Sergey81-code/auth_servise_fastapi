@@ -1,3 +1,4 @@
+from logging import getLogger
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +9,8 @@ from db.session import get_db
 from sqlalchemy.exc import IntegrityError
 
 from uuid import UUID
+
+logger = getLogger(__name__)
 
 user_router = APIRouter()
 
@@ -78,6 +81,7 @@ async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> S
     try:
         return await _create_new_user(body, db)
     except IntegrityError as err:
+        logger.error(err)
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
 
 
@@ -114,7 +118,11 @@ async def update_user_by_id(
     user = await _get_user_by_id(user_id, db)
     if user is None:
         raise HTTPException(status_code=404, detail=f'User with id {user_id} not found.')
-    updated_user_id = await _update_user(user_id, updated_user_params=updated_user_params, db=db)
+    try:
+        updated_user_id = await _update_user(user_id, updated_user_params=updated_user_params, db=db)
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f"Database error: {err}")
     return UpdatedUserResponse(updated_user_id=updated_user_id)
 
 

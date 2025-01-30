@@ -26,20 +26,20 @@ async def test_create_user(client, get_user_from_database):
 
 
 async def test_create_user_dublicate_email_error(client, create_user_in_database):
-    user_data1 = {
+    user_data = {
         "user_id": uuid4(),
         "name": "Nikolai",
         "surname": "Sviridov",
         "email": "lol@kek.com",
         "is_active": True,
     }
-    user_data2 = {
+    user_data_same_email = {
         "name": "Nikolaii",
         "surname": "Sviridovv",
         "email": "lol@kek.com"
     }
-    await create_user_in_database(user_data1)
-    resp = client.post("/user/", json=user_data2)
+    await create_user_in_database(user_data)
+    resp = client.post("/user/", json=user_data_same_email)
     assert resp.status_code == 503
     assert (
         'duplicate key value violates unique constraint "users_email_key"'

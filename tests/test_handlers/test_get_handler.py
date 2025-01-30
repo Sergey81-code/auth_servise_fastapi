@@ -42,12 +42,20 @@ async def test_get_user_id_validation_error(client):
         }
 
 
-async def test_get_user_not_found_error(client):
-    user_id = uuid4()
-    resp = client.get(f"/user/?user_id={user_id}")
+async def test_get_user_not_found_error(client, create_user_in_database):
+    user_data = {
+        'user_id': uuid4(),
+        'name': 'Nikolai',
+        'surname': 'Sviridov',
+        'email': 'lol@kek.com',
+        'is_active': True
+    }
+    user_id_for_finding = uuid4()
+    await create_user_in_database(user_data)
+    resp = client.get(f"/user/?user_id={user_id_for_finding}")
     assert resp.status_code == 404
     data_from_response = resp.json()
     assert data_from_response == {
-            "detail": f"User with id {user_id} not found."
+            "detail": f"User with id {user_id_for_finding} not found."
         }
     
