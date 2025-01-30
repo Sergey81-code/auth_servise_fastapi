@@ -1,17 +1,18 @@
-""""test running migrations"
+""" "test running migrations"
 
 Revision ID: d5543bab874b
 Revises: dea0d3baf6ab
 Create Date: 2025-01-28 19:15:31.165452
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'd5543bab874b'
-down_revision = 'dea0d3baf6ab'
+revision = "d5543bab874b"
+down_revision = "dea0d3baf6ab"
 branch_labels = None
 depends_on = None
 
