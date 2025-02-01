@@ -14,6 +14,6 @@ This will create a folder named migrations and a configuration file for Alembic
 from myapp import mymodel
 ...
 
-- Next, run the following command to create a new migration: ```alembic revision --autogenerate -m "comment"```
+- Next, run the following command to create a new migration: ```alembic revision --autogenerate -m "comment"``` - also doing if you want to change any models
 - This will generate a migration file
 - Finaly, apply the migration useing: ```alembic upgrade heads```
