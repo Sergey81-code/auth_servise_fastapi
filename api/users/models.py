@@ -9,7 +9,9 @@ from pydantic import field_validator
 
 
 LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
-PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,16}$")
+PASSWORD_REGEX = re.compile(
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,16}$"
+)
 
 
 class TunedModel(BaseModel):
@@ -51,10 +53,10 @@ class UserCreate(BaseModel):
     def validate_password(cls, value):
         if not PASSWORD_REGEX.match(value):
             raise HTTPException(
-                status_code=422, detail="Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
-                )
+                status_code=422,
+                detail="Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.",
+            )
         return value
-
 
 
 class DeleteUserResponse(BaseModel):

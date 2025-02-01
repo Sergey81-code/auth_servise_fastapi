@@ -7,7 +7,11 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.users.actions import _activate_user, _create_new_user, _delete_user, _get_user_by_id, _update_user
+from api.users.actions import _activate_user
+from api.users.actions import _create_new_user
+from api.users.actions import _delete_user
+from api.users.actions import _get_user_by_id
+from api.users.actions import _update_user
 from api.users.models import ActivateUserResponse
 from api.users.models import DeleteUserResponse
 from api.users.models import ShowUser
@@ -19,6 +23,7 @@ from db.session import get_db
 logger = getLogger(__name__)
 
 user_router = APIRouter()
+
 
 @user_router.post("/", response_model=ShowUser)
 async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:

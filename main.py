@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
-from api.users.handler import user_router
 from api.auth.handler import login_router
+from api.users.handler import user_router
 
 app = FastAPI(title="my-fastapi")
 
@@ -16,4 +16,3 @@ app.include_router(main_api_router)
 if __name__ == "__main__":
     # run app on the host and port
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-

@@ -7,6 +7,7 @@ from api.users.models import UserCreate
 from db.dals import UserDAL
 from utils.hashing import Hasher
 
+
 async def _create_new_user(body: UserCreate, db: AsyncSession) -> ShowUser:
     async with db as session:
         async with session.begin():
@@ -15,8 +16,7 @@ async def _create_new_user(body: UserCreate, db: AsyncSession) -> ShowUser:
                 name=body.name,
                 surname=body.surname,
                 email=body.email,
-                hashed_password=Hasher.get_password_hash(body.password)
-
+                hashed_password=Hasher.get_password_hash(body.password),
             )
             return ShowUser(
                 user_id=user.user_id,
