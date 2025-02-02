@@ -6,7 +6,12 @@ from utils.hashing import Hasher
 
 
 async def test_create_user(client, get_user_from_database):
-    user_data = {"name": "Nikolay", "surname": "Sviridov", "email": "lol@kek.com", "password": "Abcd12!@"}
+    user_data = {
+        "name": "Nikolay",
+        "surname": "Sviridov",
+        "email": "lol@kek.com",
+        "password": "Abcd12!@",
+    }
     resp = client.post("/user/", json=user_data)
     data_from_resp = resp.json()
     assert resp.status_code == 200
@@ -20,7 +25,9 @@ async def test_create_user(client, get_user_from_database):
     assert user_from_db["name"] == user_data["name"]
     assert user_from_db["surname"] == user_data["surname"]
     assert user_from_db["email"] == user_data["email"]
-    assert Hasher.verify_password(user_data['password'], user_from_db["hashed_password"])
+    assert Hasher.verify_password(
+        user_data["password"], user_from_db["hashed_password"]
+    )
     assert user_from_db["is_active"] is True
     assert str(user_from_db["user_id"]) == data_from_resp["user_id"]
 
@@ -56,45 +63,33 @@ async def test_create_user_dublicate_email_error(client, create_user_in_database
             {},
             422,
             {
-            "detail": [
-                {
-                "type": "missing",
-                "loc": [
-                    "body",
-                    "name"
-                ],
-                "msg": "Field required",
-                "input": {}
-                },
-                {
-                "type": "missing",
-                "loc": [
-                    "body",
-                    "surname"
-                ],
-                "msg": "Field required",
-                "input": {}
-                },
-                {
-                "type": "missing",
-                "loc": [
-                    "body",
-                    "email"
-                ],
-                "msg": "Field required",
-                "input": {}
-                },
-                {
-                "type": "missing",
-                "loc": [
-                    "body",
-                    "password"
-                ],
-                "msg": "Field required",
-                "input": {}
-                }
-            ]
-            }
+                "detail": [
+                    {
+                        "type": "missing",
+                        "loc": ["body", "name"],
+                        "msg": "Field required",
+                        "input": {},
+                    },
+                    {
+                        "type": "missing",
+                        "loc": ["body", "surname"],
+                        "msg": "Field required",
+                        "input": {},
+                    },
+                    {
+                        "type": "missing",
+                        "loc": ["body", "email"],
+                        "msg": "Field required",
+                        "input": {},
+                    },
+                    {
+                        "type": "missing",
+                        "loc": ["body", "password"],
+                        "msg": "Field required",
+                        "input": {},
+                    },
+                ]
+            },
         ),
         (
             {"name": "123", "surname": "123", "email": "lol", "password": "12345"},
@@ -107,7 +102,12 @@ async def test_create_user_dublicate_email_error(client, create_user_in_database
             {"detail": "Surname should contains only letters"},
         ),
         (
-            {"name": "Sergey", "surname": "Banny", "email": "lol", "password": "12345Abc@"},
+            {
+                "name": "Sergey",
+                "surname": "Banny",
+                "email": "lol",
+                "password": "12345Abc@",
+            },
             422,
             {
                 "detail": [
@@ -122,32 +122,52 @@ async def test_create_user_dublicate_email_error(client, create_user_in_database
             },
         ),
         (
-            {"name": "Sergey", "surname": "Banny", "email": "example@gmail.com", "password": "12345"},
+            {
+                "name": "Sergey",
+                "surname": "Banny",
+                "email": "example@gmail.com",
+                "password": "12345",
+            },
             422,
             {
                 "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
-            }
+            },
         ),
         (
-            {"name": "Sergey", "surname": "Banny", "email": "example@gmail.com", "password": "12345678"},
+            {
+                "name": "Sergey",
+                "surname": "Banny",
+                "email": "example@gmail.com",
+                "password": "12345678",
+            },
             422,
             {
                 "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
-            }
+            },
         ),
         (
-            {"name": "Sergey", "surname": "Banny", "email": "example@gmail.com", "password": "12345abc"},
+            {
+                "name": "Sergey",
+                "surname": "Banny",
+                "email": "example@gmail.com",
+                "password": "12345abc",
+            },
             422,
             {
                 "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
-            }
+            },
         ),
         (
-            {"name": "Sergey", "surname": "Banny", "email": "example@gmail.com", "password": "12345Abc"},
+            {
+                "name": "Sergey",
+                "surname": "Banny",
+                "email": "example@gmail.com",
+                "password": "12345Abc",
+            },
             422,
             {
                 "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
-            }
+            },
         ),
     ],
 )

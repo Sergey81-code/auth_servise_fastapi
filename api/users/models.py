@@ -93,7 +93,6 @@ class UpdateUserRequest(BaseModel):
                 status_code=422, detail="Surname should contains only letters"
             )
         return value
-    
 
     @field_validator("new_password")
     def validate_new_password(cls, value):

@@ -37,7 +37,9 @@ async def test_update_user(client, create_user_in_database, get_user_from_databa
     assert user_from_db["name"] == user_data_updated["name"]
     assert user_from_db["surname"] == user_data_updated["surname"]
     assert user_from_db["email"] == user_data_updated["email"]
-    assert Hasher.verify_password(user_data_updated["new_password"], user_from_db["hashed_password"])
+    assert Hasher.verify_password(
+        user_data_updated["new_password"], user_from_db["hashed_password"]
+    )
     assert user_from_db["hashed_password"] == hashed_password
     assert user_from_db["is_active"] is user_data["is_active"]
 

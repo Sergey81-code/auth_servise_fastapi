@@ -38,7 +38,7 @@ async def _activate_user(user_id: UUID, db: AsyncSession) -> UUID | None:
                 user_id=user_id,
             )
             return activated_user_id
-        
+
 
 async def _update_user(
     user_id: UUID, updated_user_params: dict, db: AsyncSession
@@ -46,10 +46,12 @@ async def _update_user(
     async with db as session:
         async with session.begin():
             user_dal = UserDAL(session)
-            del updated_user_params['old_password']
-            if updated_user_params['new_password']:
-                updated_user_params['hashed_password'] = Hasher.get_password_hash(updated_user_params['new_password'])
-                del updated_user_params['new_password']
+            del updated_user_params["old_password"]
+            if updated_user_params["new_password"]:
+                updated_user_params["hashed_password"] = Hasher.get_password_hash(
+                    updated_user_params["new_password"]
+                )
+                del updated_user_params["new_password"]
             updated_user_id = await user_dal.update_user(
                 user_id=user_id, **updated_user_params
             )

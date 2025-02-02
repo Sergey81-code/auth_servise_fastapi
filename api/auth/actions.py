@@ -50,7 +50,6 @@ async def _create_access_token(
     return encoded_jwt
 
 
-
 async def _create_refresh_token(
     data: dict, expires_delta: datetime.timedelta | None = None
 ):

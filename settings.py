@@ -8,8 +8,12 @@ REAL_DATABASE_URL = env.str(
 )
 
 
-SECRET_KEY_FOR_ACCESS: str = env.str("SECRET_KEY_FOR_ACCESS", default="your-strong-access-secret-key")
-SECRET_KEY_FOR_REFRESH: str = env.str("SECRET_KEY_FOR_REFRESH", default="your-strong-refresh-secret-key")
+SECRET_KEY_FOR_ACCESS: str = env.str(
+    "SECRET_KEY_FOR_ACCESS", default="your-strong-access-secret-key"
+)
+SECRET_KEY_FOR_REFRESH: str = env.str(
+    "SECRET_KEY_FOR_REFRESH", default="your-strong-refresh-secret-key"
+)
 ALGORITHM: str = env.str("ALGORITHM", default="HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES: int = env.int("ACCESS_TOKEN_EXPIRE_MINUTES", default=30)
 REFRESH_TOKEN_EXPIRE_DAYS: int = env.int("ACCESS_TOKEN_EXPIRE_MINUTES", default=10)

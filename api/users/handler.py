@@ -1,7 +1,10 @@
 from logging import getLogger
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,12 +32,12 @@ async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> S
     try:
         user = await _create_new_user(body, db)
         return ShowUser(
-                user_id=user.user_id,
-                name=user.name,
-                surname=user.surname,
-                email=user.email,
-                is_active=user.is_active,
-            )
+            user_id=user.user_id,
+            name=user.name,
+            surname=user.surname,
+            email=user.email,
+            is_active=user.is_active,
+        )
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
@@ -72,13 +75,12 @@ async def get_user_by_id(user_id: UUID, db: AsyncSession = Depends(get_db)) -> S
             status_code=404, detail=f"User with id {user_id} not found."
         )
     return ShowUser(
-            user_id=user.user_id,
-            name=user.name,
-            surname=user.surname,
-            email=user.email,
-            is_active=user.is_active,
-        )
-
+        user_id=user.user_id,
+        name=user.name,
+        surname=user.surname,
+        email=user.email,
+        is_active=user.is_active,
+    )
 
 
 @user_router.patch("/", response_model=UpdatedUserResponse)
@@ -97,7 +99,9 @@ async def update_user_by_id(
         raise HTTPException(
             status_code=404, detail=f"User with id {user_id} not found."
         )
-    if not Hasher.verify_password(updated_user_params["old_password"], user.hashed_password):
+    if not Hasher.verify_password(
+        updated_user_params["old_password"], user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
