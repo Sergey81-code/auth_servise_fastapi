@@ -1,9 +1,7 @@
 from logging import getLogger
 from uuid import UUID
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +17,7 @@ from api.users.models import UpdatedUserResponse
 from api.users.models import UpdateUserRequest
 from api.users.models import UserCreate
 from db.session import get_db
+from utils.hashing import Hasher
 
 logger = getLogger(__name__)
 
@@ -28,7 +27,14 @@ user_router = APIRouter()
 @user_router.post("/", response_model=ShowUser)
 async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:
     try:
-        return await _create_new_user(body, db)
+        user = await _create_new_user(body, db)
+        return ShowUser(
+                user_id=user.user_id,
+                name=user.name,
+                surname=user.surname,
+                email=user.email,
+                is_active=user.is_active,
+            )
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
@@ -65,7 +71,14 @@ async def get_user_by_id(user_id: UUID, db: AsyncSession = Depends(get_db)) -> S
         raise HTTPException(
             status_code=404, detail=f"User with id {user_id} not found."
         )
-    return user
+    return ShowUser(
+            user_id=user.user_id,
+            name=user.name,
+            surname=user.surname,
+            email=user.email,
+            is_active=user.is_active,
+        )
+
 
 
 @user_router.patch("/", response_model=UpdatedUserResponse)
@@ -79,9 +92,15 @@ async def update_user_by_id(
             detail="At least one parameter for user update info should be proveded",
         )
     user = await _get_user_by_id(user_id, db)
+
     if user is None:
         raise HTTPException(
             status_code=404, detail=f"User with id {user_id} not found."
+        )
+    if not Hasher.verify_password(updated_user_params["old_password"], user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
         )
     try:
         updated_user_id = await _update_user(

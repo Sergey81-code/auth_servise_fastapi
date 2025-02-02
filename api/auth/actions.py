@@ -45,7 +45,25 @@ async def _create_access_token(
         )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+        to_encode, settings.SECRET_KEY_FOR_ACCESS, algorithm=settings.ALGORITHM
+    )
+    return encoded_jwt
+
+
+
+async def _create_refresh_token(
+    data: dict, expires_delta: datetime.timedelta | None = None
+):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.datetime.now(datetime.timezone.utc) + expires_delta
+    else:
+        expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY_FOR_REFRESH, algorithm=settings.ALGORITHM
     )
     return encoded_jwt
 
@@ -62,7 +80,7 @@ async def _get_current_user_from_token(
     )
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.SECRET_KEY_FOR_ACCESS, algorithms=[settings.ALGORITHM]
         )
         username: str = payload.get("sub")
         print("username/email extracted is ", username)

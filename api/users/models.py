@@ -72,9 +72,11 @@ class UpdatedUserResponse(BaseModel):
 
 
 class UpdateUserRequest(BaseModel):
+    old_password: str
     name: Optional[str] = None
     surname: Optional[str] = None
     email: Optional[EmailStr] = None
+    new_password: str = None
 
     @field_validator("name")
     def validator_name(cls, value):
@@ -89,5 +91,15 @@ class UpdateUserRequest(BaseModel):
         if not LETTER_MATCH_PATTERN.match(value):
             raise HTTPException(
                 status_code=422, detail="Surname should contains only letters"
+            )
+        return value
+    
+
+    @field_validator("new_password")
+    def validate_new_password(cls, value):
+        if not PASSWORD_REGEX.match(value):
+            raise HTTPException(
+                status_code=422,
+                detail="Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.",
             )
         return value

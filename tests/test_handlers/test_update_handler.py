@@ -3,6 +3,8 @@ from uuid import uuid4
 
 import pytest
 
+from utils.hashing import Hasher
+
 
 async def test_update_user(client, create_user_in_database, get_user_from_database):
     user_data = {
@@ -10,17 +12,21 @@ async def test_update_user(client, create_user_in_database, get_user_from_databa
         "name": "Nikolai",
         "surname": "Sviridov",
         "email": "lol@kek.com",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     user_data_updated = {
+        "old_password": user_data["password"],
         "name": "Ivan",
         "surname": "Ivanov",
         "email": "cheburek@kek.com",
+        "new_password": "Abcd12!@1",
     }
     await create_user_in_database(user_data)
     resp = client.patch(
         f"/user/?user_id={user_data['user_id']}", json=user_data_updated
     )
+    hashed_password = Hasher.get_password_hash(user_data_updated["new_password"])
     assert resp.status_code == 200
     resp_data = resp.json()
     assert resp_data["updated_user_id"] == str(user_data["user_id"])
@@ -31,6 +37,8 @@ async def test_update_user(client, create_user_in_database, get_user_from_databa
     assert user_from_db["name"] == user_data_updated["name"]
     assert user_from_db["surname"] == user_data_updated["surname"]
     assert user_from_db["email"] == user_data_updated["email"]
+    assert Hasher.verify_password(user_data_updated["new_password"], user_from_db["hashed_password"])
+    assert user_from_db["hashed_password"] == hashed_password
     assert user_from_db["is_active"] is user_data["is_active"]
 
 
@@ -42,6 +50,7 @@ async def test_update_only_one_user(
         "name": "name1",
         "email": "email1@gmail.ru",
         "surname": "surname1",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     user2 = {
@@ -49,6 +58,7 @@ async def test_update_only_one_user(
         "name": "name2",
         "email": "email2@gmail.ru",
         "surname": "surname2",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     user3 = {
@@ -56,6 +66,7 @@ async def test_update_only_one_user(
         "name": "name3",
         "email": "email3@gmail.ru",
         "surname": "surname3",
+        "password": "Abcd12!@",
         "is_active": True,
     }
 
@@ -156,6 +167,7 @@ async def test_update_user_validation_error(
         "name": "Nikolai",
         "surname": "Sviridov",
         "email": "lol@kek.com",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     await create_user_in_database(user_data)
@@ -173,6 +185,7 @@ async def test_update_user_id_validation_error(client, create_user_in_database):
         "name": "Nikolai",
         "surname": "Sviridov",
         "email": "lol@kek.com",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     await create_user_in_database(user_data)
@@ -208,6 +221,7 @@ async def test_update_user_not_found_error(client, create_user_in_database):
         "name": "Nikolai",
         "surname": "Sviridov",
         "email": "lol@kek.com",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     await create_user_in_database(user_data)
@@ -234,6 +248,7 @@ async def test_update_user_dublicate_email_error(client, create_user_in_database
         "name": "Nikolai",
         "surname": "Sviridov",
         "email": "lol@kek.com",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     user_data2 = {
@@ -241,6 +256,7 @@ async def test_update_user_dublicate_email_error(client, create_user_in_database
         "name": "Nikolaii",
         "surname": "Sviridovv",
         "email": "lol1@kek.com",
+        "password": "Abcd12!@",
         "is_active": True,
     }
     await create_user_in_database(user_data1)

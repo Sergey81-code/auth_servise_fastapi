@@ -16,6 +16,7 @@ from starlette.testclient import TestClient
 import settings
 from db.session import get_db
 from main import app
+from utils.hashing import Hasher
 
 
 test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
@@ -134,12 +135,13 @@ async def create_user_in_database(asyncpg_pool):
     async def create_user_in_database(user: dict):
         async with asyncpg_pool.acquire() as connection:
             return await connection.execute(
-                """INSERT INTO users VALUES ($1, $2, $3, $4, $5)""",
+                """INSERT INTO users VALUES ($1, $2, $3, $4, $5, $6)""",
                 user["user_id"],
                 user["name"],
                 user["surname"],
                 user["email"],
                 user["is_active"],
+                Hasher.get_password_hash(user["password"]),
             )
 
     return create_user_in_database
