@@ -143,4 +143,3 @@ docker-compose.override.yml
 
 #Another
 .pylintrc
-/tests/migrations/

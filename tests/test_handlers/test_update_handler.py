@@ -26,7 +26,6 @@ async def test_update_user(client, create_user_in_database, get_user_from_databa
     resp = client.patch(
         f"/user/?user_id={user_data['user_id']}", json=user_data_updated
     )
-    hashed_password = Hasher.get_password_hash(user_data_updated["new_password"])
     assert resp.status_code == 200
     resp_data = resp.json()
     assert resp_data["updated_user_id"] == str(user_data["user_id"])
@@ -40,7 +39,6 @@ async def test_update_user(client, create_user_in_database, get_user_from_databa
     assert Hasher.verify_password(
         user_data_updated["new_password"], user_from_db["hashed_password"]
     )
-    assert user_from_db["hashed_password"] == hashed_password
     assert user_from_db["is_active"] is user_data["is_active"]
 
 
@@ -72,7 +70,13 @@ async def test_update_only_one_user(
         "is_active": True,
     }
 
-    user1_update_data = {"name": "name", "surname": "surname", "email": "email@mail.ru"}
+    user1_update_data = {
+        "old_password": user1["password"],
+        "name": "name",
+        "surname": "surname",
+        "email": "email@mail.ru",
+        "new_password": "AAbcd12!@",
+    }
 
     created_request = [
         create_user_in_database(user_data) for user_data in [user1, user2, user3]
@@ -96,18 +100,23 @@ async def test_update_only_one_user(
     assert user1_from_db["name"] == user1_update_data["name"]
     assert user1_from_db["surname"] == user1_update_data["surname"]
     assert user1_from_db["email"] == user1_update_data["email"]
+    assert Hasher.verify_password(
+        user1_update_data["new_password"], user1_from_db["hashed_password"]
+    )
     assert user1_from_db["is_active"] is user1["is_active"]
 
     assert user2_from_db["user_id"] == user2["user_id"]
     assert user2_from_db["name"] == user2["name"]
     assert user2_from_db["surname"] == user2["surname"]
     assert user2_from_db["email"] == user2["email"]
+    assert Hasher.verify_password(user2["password"], user2_from_db["hashed_password"])
     assert user2_from_db["is_active"] is user2["is_active"]
 
     assert user3_from_db["user_id"] == user3["user_id"]
     assert user3_from_db["name"] == user3["name"]
     assert user3_from_db["surname"] == user3["surname"]
     assert user3_from_db["email"] == user3["email"]
+    assert Hasher.verify_password(user3["password"], user3_from_db["hashed_password"])
     assert user3_from_db["is_active"] is user3["is_active"]
 
 
@@ -118,13 +127,28 @@ async def test_update_only_one_user(
             {},
             422,
             {
-                "detail": "At least one parameter for user update info should be proveded"
+                "detail": [
+                    {
+                        "type": "missing",
+                        "loc": ["body", "old_password"],
+                        "msg": "Field required",
+                        "input": {},
+                    }
+                ]
             },
         ),
-        ({"name": "123"}, 422, {"detail": "Name should contains only letters"}),
-        ({"surname": "123"}, 422, {"detail": "Surname should contains only letters"}),
         (
-            {"email": "123"},
+            {"old_password": "Abcd12!@", "name": "123"},
+            422,
+            {"detail": "Name should contains only letters"},
+        ),
+        (
+            {"old_password": "Abcd12!@", "surname": "123"},
+            422,
+            {"detail": "Surname should contains only letters"},
+        ),
+        (
+            {"old_password": "Abcd12!@", "email": "123"},
             422,
             {
                 "detail": [
@@ -139,7 +163,7 @@ async def test_update_only_one_user(
             },
         ),
         (
-            {"email": ""},
+            {"old_password": "Abcd12!@", "email": ""},
             422,
             {
                 "detail": [
@@ -153,8 +177,86 @@ async def test_update_only_one_user(
                 ]
             },
         ),
-        ({"name": ""}, 422, {"detail": "Name should contains only letters"}),
-        ({"surname": ""}, 422, {"detail": "Surname should contains only letters"}),
+        (
+            {"old_password": "Abcd12!@", "name": ""},
+            422,
+            {"detail": "Name should contains only letters"},
+        ),
+        (
+            {"old_password": "Abcd12!@", "surname": ""},
+            422,
+            {"detail": "Surname should contains only letters"},
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": ""},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345678"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345678aa"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345678AA"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345678Aa"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345678A!@"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"old_password": "Abcd12!@", "new_password": "12345678a!@"},
+            422,
+            {
+                "detail": "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            },
+        ),
+        (
+            {"name": "Sergey", "email": "joker@mail.ru"},
+            422,
+            {
+                "detail": [
+                    {
+                        "type": "missing",
+                        "loc": ["body", "old_password"],
+                        "msg": "Field required",
+                        "input": {"name": "Sergey", "email": "joker@mail.ru"},
+                    }
+                ]
+            },
+        ),
     ],
 )
 async def test_update_user_validation_error(
@@ -192,6 +294,7 @@ async def test_update_user_id_validation_error(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     user_data_updated = {
+        "old_password": user_data["password"],
         "name": "Ivan",
         "surname": "Ivanov",
         "email": "cheburek@kek.com",
@@ -228,6 +331,7 @@ async def test_update_user_not_found_error(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     user_data_updated = {
+        "old_password": user_data["password"],
         "name": "Ivan",
         "surname": "Ivanov",
         "email": "cheburek@kek.com",
@@ -264,6 +368,7 @@ async def test_update_user_dublicate_email_error(client, create_user_in_database
     await create_user_in_database(user_data1)
     await create_user_in_database(user_data2)
     user_data_dublicate_email = {
+        "old_password": user_data1["password"],
         "email": user_data2["email"],
     }
     resp = client.patch(

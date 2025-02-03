@@ -81,13 +81,13 @@ async def _get_current_user_from_token(
         payload = jwt.decode(
             token, settings.SECRET_KEY_FOR_ACCESS, algorithms=[settings.ALGORITHM]
         )
-        username: str = payload.get("sub")
-        print("username/email extracted is ", username)
-        if username is None:
+        email: str = payload.get("sub")
+        print("username/email extracted is ", email)
+        if email is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = await _get_user_by_email_for_auth(email=username, db=db)
+    user = await _get_user_by_email_for_auth(email=email, db=db)
     if user is None:
         raise credentials_exception
     return user

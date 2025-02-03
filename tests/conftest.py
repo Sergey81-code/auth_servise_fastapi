@@ -1,7 +1,5 @@
 import asyncio
 import os
-import subprocess
-import sys
 from typing import Any
 from typing import AsyncGenerator
 
@@ -12,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
+from alembic import command
+from alembic.config import Config
 
 import settings
 from db.session import get_db
@@ -39,33 +39,14 @@ def event_loop():
 
 @pytest.fixture(scope="session", autouse=True)
 async def run_migrations():
-    alembic_cmd = "alembic"
-
-    if sys.platform == "win32":
-        alembic_cmd = os.path.join(os.getcwd(), "venv", "Scripts", "alembic.exe")
-
-    migrations_dir = os.path.join(os.getcwd(), "tests", "migrations")
     alembic_ini_path = os.path.join(os.getcwd(), "tests", "alembic.ini")
+    alembic_cfg = Config(alembic_ini_path)
 
-    if not os.path.exists(migrations_dir):
-        subprocess.run([alembic_cmd, "init", migrations_dir], check=True)
+    command.upgrade(alembic_cfg, "head")
 
-    subprocess.run(
-        [
-            alembic_cmd,
-            "-c",
-            alembic_ini_path,
-            "revision",
-            "--autogenerate",
-            "-m",
-            '"test running migrations"',
-        ],
-        check=True,
-    )
+    yield
 
-    subprocess.run(
-        [alembic_cmd, "-c", alembic_ini_path, "upgrade", "heads"], check=True
-    )
+    command.downgrade(alembic_cfg, "base")
 
 
 @pytest.fixture(scope="session")

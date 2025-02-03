@@ -47,7 +47,7 @@ async def _update_user(
         async with session.begin():
             user_dal = UserDAL(session)
             del updated_user_params["old_password"]
-            if updated_user_params["new_password"]:
+            if "new_password" in updated_user_params.keys():
                 updated_user_params["hashed_password"] = Hasher.get_password_hash(
                     updated_user_params["new_password"]
                 )
