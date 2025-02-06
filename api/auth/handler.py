@@ -12,11 +12,9 @@ from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import settings
-from api.auth.actions import _authenticate_user
-from api.auth.actions import _create_access_token
-from api.auth.actions import _create_refresh_token
+from api.auth.actions import _authenticate_user, _create_jwt_token
 from api.auth.models import Token
-from db.session import get_db
+from db.session import get_session
 
 
 login_router = APIRouter()
@@ -26,22 +24,24 @@ login_router = APIRouter()
 async def login_for_access_token(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_session),
 ):
-    user = await _authenticate_user(form_data.username, form_data.password, db)
+    user = await _authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await _create_access_token(
+    access_token = await _create_jwt_token(
         data={"sub": user.email, "other_custom_data": [1, 2, 3, 4]},
+        token_type = "access",
         expires_delta=access_token_expires,
     )
     refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token = await _create_refresh_token(
+    refresh_token = await _create_jwt_token(
         data={"sub": user.email, "other_custom_data": [1, 2, 3, 4]},
+        token_type="refresh",
         expires_delta=refresh_token_expires,
     )
     response.set_cookie(
@@ -57,7 +57,7 @@ async def login_for_access_token(
 
 
 @login_router.post("/token", response_model=Token)
-async def create_new_access_token(request: Request, db: AsyncSession = Depends(get_db)):
+async def create_new_access_token(request: Request):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -73,8 +73,9 @@ async def create_new_access_token(request: Request, db: AsyncSession = Depends(g
         if email is None:
             raise credentials_exception
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await _create_access_token(
+        access_token = await _create_jwt_token(
             data={"sub": email, "other_custom_data": [1, 2, 3, 4]},
+            token_type = "access",
             expires_delta=access_token_expires,
         )
     except (JWTError, TypeError, AttributeError):

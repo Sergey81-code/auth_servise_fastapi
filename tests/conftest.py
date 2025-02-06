@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta, timezone
 import os
 from typing import Any
 from typing import AsyncGenerator
@@ -12,9 +13,11 @@ from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
 from alembic import command
 from alembic.config import Config
+from jose import jwt
 
+from api.auth.actions import _create_jwt_token
 import settings
-from db.session import get_db
+from db.session import get_session
 from main import app
 from utils.hashing import Hasher
 
@@ -28,6 +31,7 @@ test_async_session = sessionmaker(
 CLEAN_TABLES = [
     "users",
 ]
+
 
 
 @pytest.fixture(scope="session")
@@ -66,7 +70,7 @@ async def clean_tables(async_session_test):
                 )
 
 
-async def _get_test_db():
+async def _get_test_session():
     try:
         test_engine = create_async_engine(
             settings.TEST_DATABASE_URL, future=True, echo=True
@@ -83,10 +87,10 @@ async def _get_test_db():
 async def client() -> AsyncGenerator[TestClient, Any]:
     """
     Create a new FastApi TestClient that uses the 'db_session' fixture to override
-    the 'get_db' dependency that is injected into routers.
+    the 'get_session' dependency that is injected into routers.
     """
 
-    app.dependency_overrides[get_db] = _get_test_db
+    app.dependency_overrides[get_session] = _get_test_session
     with TestClient(app) as client:
         yield client
 
@@ -126,3 +130,42 @@ async def create_user_in_database(asyncpg_pool):
             )
 
     return create_user_in_database
+
+
+
+async def create_test_jwt_token_for_user(email: str, token_type) -> str:
+    token = await _create_jwt_token(
+        data={"sub":email},
+        token_type=token_type
+    )
+    return token
+
+
+
+async def create_test_auth_headers_for_user(email: str) -> dict[str, str]:
+    access_token = await create_test_jwt_token_for_user(email, "access")
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+async def get_test_data_from_jwt_token(token: str, token_type: str) -> str:
+    token_key = (
+        settings.SECRET_KEY_FOR_ACCESS 
+        if token_type == "access" 
+        else settings.SECRET_KEY_FOR_REFRESH
+    )
+    payload = jwt.decode(
+        token, key=token_key, algorithms=[settings.ALGORITHM]
+    )
+    return payload
+
+
+async def assert_token_lifetime(token_data, expected_minutes):
+    exp_timestamp = token_data.get("exp")
+    if exp_timestamp is None:
+        return False
+
+    exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+    now_datetime = datetime.now(timezone.utc)
+
+    token_lifetime = (exp_datetime - now_datetime).total_seconds() / 60
+    return expected_minutes - 5 <= token_lifetime <= expected_minutes

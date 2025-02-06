@@ -11,67 +11,54 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import settings
 from db.dals import UserDAL
 from db.models import User
-from db.session import get_db
+from db.session import get_session
 from utils.hashing import Hasher
 
 
-async def _get_user_by_email_for_auth(email: str, db: AsyncSession) -> User | None:
-    async with db as session:
-        async with session.begin():
-            user_dal = UserDAL(session)
-            user = await user_dal.get_user_by_email(email=email)
-            return user
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/token")
+
+
+async def _get_user_by_email_for_auth(email: str, session: AsyncSession) -> User | None:
+    async with session.begin():
+        user_dal = UserDAL(session)
+        user = await user_dal.get_user_by_email(email=email)
+        return user
 
 
 async def _authenticate_user(
-    email: str, password: str, db: AsyncSession
+    email: str, password: str, session: AsyncSession
 ) -> User | None:
-    user = await _get_user_by_email_for_auth(email, db)
+    user = await _get_user_by_email_for_auth(email, session)
     if user is not None:
         if not Hasher.verify_password(password, user.hashed_password):
             return None
     return user
 
 
-async def _create_access_token(
-    data: dict, expires_delta: datetime.timedelta | None = None
+async def _create_jwt_token(
+    data: dict, token_type: str, expires_delta: datetime.timedelta | None = None
 ):
+    token_key, token_time = (
+        (settings.SECRET_KEY_FOR_ACCESS, settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        if token_type == "access"
+        else (settings.SECRET_KEY_FOR_REFRESH, settings.REFRESH_TOKEN_EXPIRE_DAYS*24*60)
+    )
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.datetime.now(datetime.timezone.utc) + expires_delta
     else:
         expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=token_time
         )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY_FOR_ACCESS, algorithm=settings.ALGORITHM
+        to_encode, token_key, algorithm=settings.ALGORITHM
     )
     return encoded_jwt
-
-
-async def _create_refresh_token(
-    data: dict, expires_delta: datetime.timedelta | None = None
-):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.datetime.now(datetime.timezone.utc) + expires_delta
-    else:
-        expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
-        )
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY_FOR_REFRESH, algorithm=settings.ALGORITHM
-    )
-    return encoded_jwt
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/token")
 
 
 async def _get_current_user_from_token(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+    token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_session)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,7 +74,7 @@ async def _get_current_user_from_token(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = await _get_user_by_email_for_auth(email=email, db=db)
+    user = await _get_user_by_email_for_auth(email=email, session=session)
     if user is None:
         raise credentials_exception
     return user

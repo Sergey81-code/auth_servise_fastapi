@@ -9,7 +9,7 @@ engine = create_async_engine(settings.REAL_DATABASE_URL, future=True, echo=True)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
-async def get_db():
+async def get_session():
     """Dependency for getting async session"""
     try:
         session: AsyncSession = async_session()
