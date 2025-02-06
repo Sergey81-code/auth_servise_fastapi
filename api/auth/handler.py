@@ -12,7 +12,8 @@ from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import settings
-from api.auth.actions import _authenticate_user, _create_jwt_token
+from api.auth.actions import _authenticate_user
+from api.auth.actions import _create_jwt_token
 from api.auth.models import Token
 from db.session import get_session
 
@@ -35,7 +36,7 @@ async def login_for_access_token(
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await _create_jwt_token(
         data={"sub": user.email, "other_custom_data": [1, 2, 3, 4]},
-        token_type = "access",
+        token_type="access",
         expires_delta=access_token_expires,
     )
     refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
@@ -75,7 +76,7 @@ async def create_new_access_token(request: Request):
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = await _create_jwt_token(
             data={"sub": email, "other_custom_data": [1, 2, 3, 4]},
-            token_type = "access",
+            token_type="access",
             expires_delta=access_token_expires,
         )
     except (JWTError, TypeError, AttributeError):

@@ -1,22 +1,23 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
 import os
+from datetime import datetime
+from datetime import timezone
 from typing import Any
 from typing import AsyncGenerator
 
 import asyncpg
 import pytest
 import sqlalchemy
+from alembic import command
+from alembic.config import Config
+from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
-from alembic import command
-from alembic.config import Config
-from jose import jwt
 
-from api.auth.actions import _create_jwt_token
 import settings
+from api.auth.actions import _create_jwt_token
 from db.session import get_session
 from main import app
 from utils.hashing import Hasher
@@ -31,7 +32,6 @@ test_async_session = sessionmaker(
 CLEAN_TABLES = [
     "users",
 ]
-
 
 
 @pytest.fixture(scope="session")
@@ -132,14 +132,9 @@ async def create_user_in_database(asyncpg_pool):
     return create_user_in_database
 
 
-
 async def create_test_jwt_token_for_user(email: str, token_type) -> str:
-    token = await _create_jwt_token(
-        data={"sub":email},
-        token_type=token_type
-    )
+    token = await _create_jwt_token(data={"sub": email}, token_type=token_type)
     return token
-
 
 
 async def create_test_auth_headers_for_user(email: str) -> dict[str, str]:
@@ -149,13 +144,11 @@ async def create_test_auth_headers_for_user(email: str) -> dict[str, str]:
 
 async def get_test_data_from_jwt_token(token: str, token_type: str) -> str:
     token_key = (
-        settings.SECRET_KEY_FOR_ACCESS 
-        if token_type == "access" 
+        settings.SECRET_KEY_FOR_ACCESS
+        if token_type == "access"
         else settings.SECRET_KEY_FOR_REFRESH
     )
-    payload = jwt.decode(
-        token, key=token_key, algorithms=[settings.ALGORITHM]
-    )
+    payload = jwt.decode(token, key=token_key, algorithms=[settings.ALGORITHM])
     return payload
 
 

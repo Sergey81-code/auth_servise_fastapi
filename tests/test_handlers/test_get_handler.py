@@ -38,7 +38,7 @@ async def test_get_user_id_validation_error(client, create_user_in_database):
     await create_user_in_database(user_data)
     resp = client.get(
         "/user/?user_id=123",
-        headers= await create_test_auth_headers_for_user(user_data["email"]),
+        headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 422
     data_from_response = resp.json()
@@ -70,14 +70,13 @@ async def test_get_user_not_found_error(client, create_user_in_database):
     await create_user_in_database(user_data)
     resp = client.get(
         f"/user/?user_id={user_id_for_finding}",
-        headers= await create_test_auth_headers_for_user(user_data["email"]),
+        headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 404
     data_from_response = resp.json()
     assert data_from_response == {
         "detail": f"User with id {user_id_for_finding} not found."
     }
-
 
 
 async def test_get_user_bad_cred(client, create_user_in_database):
@@ -92,11 +91,10 @@ async def test_get_user_bad_cred(client, create_user_in_database):
     await create_user_in_database(user_data)
     resp = client.get(
         f"/user/?user_id={user_data["user_id"]}",
-        headers= await create_test_auth_headers_for_user(user_data["email"] + "a"),
+        headers=await create_test_auth_headers_for_user(user_data["email"] + "a"),
     )
     assert resp.status_code == 401
     assert resp.json() == {"detail": "Could not validate credentials"}
-
 
 
 async def test_get_user_unauth(client, create_user_in_database):
@@ -119,7 +117,6 @@ async def test_get_user_unauth(client, create_user_in_database):
     assert resp.json() == {"detail": "Could not validate credentials"}
 
 
-
 async def test_get_user_no_jwt(client, create_user_in_database):
     user_data = {
         "user_id": uuid4(),
@@ -135,4 +132,3 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     )
     assert resp.status_code == 401
     assert resp.json() == {"detail": "Not authenticated"}
-
