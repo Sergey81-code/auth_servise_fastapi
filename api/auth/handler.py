@@ -1,17 +1,14 @@
-from datetime import timedelta
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
-from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.auth.services.AuthService import AuthService
-from api.auth.services.AuthExceptionService import AuthExceptionService
 import settings
 from api.auth.models import Token
+from api.auth.services.AuthExceptionService import AuthExceptionService
+from api.auth.services.AuthService import AuthService
 from db.session import get_session
 
 
@@ -24,7 +21,9 @@ async def login_for_get_tokens(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    auth_service = await AuthService.create(form_data.username, form_data.password, session)
+    auth_service = await AuthService.create(
+        form_data.username, form_data.password, session
+    )
 
     access_token = await auth_service.create_access_token()
     refresh_token = await auth_service.create_refresh_token()

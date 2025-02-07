@@ -1,6 +1,7 @@
 import uuid
 
-from sqlalchemy import ARRAY, Boolean
+from sqlalchemy import ARRAY
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import UUID
