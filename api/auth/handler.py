@@ -1,5 +1,4 @@
 from datetime import timedelta
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -7,13 +6,11 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
-from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.auth.services.AuthService import AuthService
+from api.auth.services.AuthExceptionService import AuthExceptionService
 import settings
-from api.auth.actions import _authenticate_user
-from api.auth.actions import _create_jwt_token
 from api.auth.models import Token
 from db.session import get_session
 
@@ -22,36 +19,23 @@ login_router = APIRouter()
 
 
 @login_router.post("/", response_model=Token)
-async def login_for_access_token(
+async def login_for_get_tokens(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    user = await _authenticate_user(form_data.username, form_data.password, session)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await _create_jwt_token(
-        data={"sub": user.email, "other_custom_data": [1, 2, 3, 4]},
-        token_type="access",
-        expires_delta=access_token_expires,
-    )
-    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token = await _create_jwt_token(
-        data={"sub": user.email, "other_custom_data": [1, 2, 3, 4]},
-        token_type="refresh",
-        expires_delta=refresh_token_expires,
-    )
+    auth_service = await AuthService.create(form_data.username, form_data.password, session)
+
+    access_token = await auth_service.create_access_token()
+    refresh_token = await auth_service.create_refresh_token()
+
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=False,  # Not only https. Turn off in realise
         samesite="Strict",
-        max_age=60 * 60 * 24 * 10,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
@@ -59,26 +43,9 @@ async def login_for_access_token(
 
 @login_router.post("/token", response_model=Token)
 async def create_new_access_token(request: Request):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-    )
-    try:
-        refresh_token = request.cookies.get("refresh_token")
-        payload = jwt.decode(
-            refresh_token,
-            settings.SECRET_KEY_FOR_REFRESH,
-            algorithms=[settings.ALGORITHM],
-        )
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await _create_jwt_token(
-            data={"sub": email, "other_custom_data": [1, 2, 3, 4]},
-            token_type="access",
-            expires_delta=access_token_expires,
-        )
-    except (JWTError, TypeError, AttributeError):
-        raise credentials_exception
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        AuthExceptionService.unauthorized_exception("Could not validate credentials")
+
+    access_token = await AuthService.create_access_token_from_refresh(refresh_token)
     return {"access_token": access_token, "token_type": "bearer"}

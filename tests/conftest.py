@@ -16,11 +16,12 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
 
+from api.auth.services.JWTService import JWTService
 import settings
-from api.auth.actions import _create_jwt_token
 from db.session import get_session
 from main import app
 from utils.hashing import Hasher
+from utils.roles import PortalRole
 
 
 test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
@@ -120,20 +121,21 @@ async def create_user_in_database(asyncpg_pool):
     async def create_user_in_database(user: dict):
         async with asyncpg_pool.acquire() as connection:
             return await connection.execute(
-                """INSERT INTO users VALUES ($1, $2, $3, $4, $5, $6)""",
+                """INSERT INTO users VALUES ($1, $2, $3, $4, $5, $6, $7)""",
                 user["user_id"],
                 user["name"],
                 user["surname"],
                 user["email"],
                 user["is_active"],
                 Hasher.get_password_hash(user["password"]),
+                [PortalRole.ROLE_PORTAL_USER, ]
             )
 
     return create_user_in_database
 
 
 async def create_test_jwt_token_for_user(email: str, token_type) -> str:
-    token = await _create_jwt_token(data={"sub": email}, token_type=token_type)
+    token = await JWTService.create_jwt_token(data={"sub": email}, token_type=token_type)
     return token
 
 
