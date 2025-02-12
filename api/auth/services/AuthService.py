@@ -25,7 +25,9 @@ class AuthService:
     async def create(cls, email: str, password: str, session: AsyncSession):
         user = await cls._authenticate_user(email, password, session)
         if not user:
-            AuthExceptionService.unauthorized_exception("Incorrect username or password")
+            AuthExceptionService.unauthorized_exception(
+                "Incorrect username or password"
+            )
         return cls(user, session)
 
     @staticmethod

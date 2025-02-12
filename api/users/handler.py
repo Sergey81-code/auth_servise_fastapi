@@ -8,10 +8,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.services.AuthService import AuthService
-from api.users.actions import activate_user_action, fetch_user_or_raise, check_user_permissions
+from api.users.actions import activate_user_action
+from api.users.actions import check_user_permissions
 from api.users.actions import create_new_user_action
 from api.users.actions import delete_user_action
-from api.users.actions import get_user_by_id_action
+from api.users.actions import fetch_user_or_raise
 from api.users.actions import update_user_action
 from api.users.models import ActivateUserResponse
 from api.users.models import DeleteUserResponse
@@ -53,12 +54,16 @@ async def delete_user(
     session: AsyncSession = Depends(get_session),
 ) -> DeleteUserResponse:
     target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
-    if target_user == current_user and PortalRole.ROLE_PORTAL_SUPERADMIN in current_user.roles:
-        raise HTTPException(status_code=406, detail="Superadmin cannot be deleted via API.")
-    
+    if (
+        target_user == current_user
+        and PortalRole.ROLE_PORTAL_SUPERADMIN in current_user.roles
+    ):
+        raise HTTPException(
+            status_code=406, detail="Superadmin cannot be deleted via API."
+        )
+
     if not await check_user_permissions(
-        target_user=target_user,
-        current_user=current_user
+        target_user=target_user, current_user=current_user
     ):
         raise HTTPException(status_code=403, detail="Forbidden.")
 
@@ -78,8 +83,7 @@ async def activate_user(
 ) -> ActivateUserResponse:
     target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
     if not await check_user_permissions(
-        target_user=target_user,
-        current_user=current_user
+        target_user=target_user, current_user=current_user
     ):
         raise HTTPException(status_code=403, detail="Forbidden.")
 
@@ -95,8 +99,7 @@ async def get_user_by_id(
 ) -> ShowUser:
     target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
     if not await check_user_permissions(
-        target_user=target_user,
-        current_user=current_user
+        target_user=target_user, current_user=current_user
     ):
         raise HTTPException(status_code=403, detail="Forbidden.")
 
@@ -118,8 +121,7 @@ async def update_user_by_id(
 ) -> UpdatedUserResponse:
     target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
     if not await check_user_permissions(
-        target_user=target_user,
-        current_user=current_user
+        target_user=target_user, current_user=current_user
     ):
         raise HTTPException(status_code=403, detail="Forbidden.")
 

@@ -68,7 +68,7 @@ async def test_get_user_not_found_error(client, create_user_in_database):
         "email": "lol@kek.com",
         "password": "Abcd12!@",
         "is_active": True,
-        "roles" : [PortalRole.ROLE_PORTAL_USER, PortalRole.ROLE_PORTAL_SUPERADMIN],
+        "roles": [PortalRole.ROLE_PORTAL_USER, PortalRole.ROLE_PORTAL_SUPERADMIN],
     }
     user_id_for_finding = uuid4()
     await create_user_in_database(user_data)
@@ -138,7 +138,6 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     assert resp.json() == {"detail": "Not authenticated"}
 
 
-
 @pytest.mark.parametrize(
     "user_role_list",
     [
@@ -148,7 +147,7 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     ],
 )
 async def test_get_user_by_privilage_roles(
-        client, create_user_in_database, user_role_list
+    client, create_user_in_database, user_role_list
 ):
     user_data_for_getting = {
         "user_id": uuid4(),
@@ -157,7 +156,7 @@ async def test_get_user_by_privilage_roles(
         "email": "lol@kek.com",
         "password": "Abcd12!@",
         "is_active": True,
-        "roles": [PortalRole.ROLE_PORTAL_USER]
+        "roles": [PortalRole.ROLE_PORTAL_USER],
     }
     user_who_get = {
         "user_id": uuid4(),
@@ -172,7 +171,7 @@ async def test_get_user_by_privilage_roles(
     await create_user_in_database(user_who_get)
     resp = client.get(
         f"/user/?user_id={user_data_for_getting['user_id']}",
-        headers=await create_test_auth_headers_for_user(user_who_get['email'])
+        headers=await create_test_auth_headers_for_user(user_who_get["email"]),
     )
     assert resp.status_code == 200
     user_from_response = resp.json()
@@ -183,9 +182,10 @@ async def test_get_user_by_privilage_roles(
     assert user_from_response["is_active"] is user_data_for_getting["is_active"]
 
 
-
-@pytest.mark.parametrize("user_for_getting, user_who_get", [
-    (
+@pytest.mark.parametrize(
+    "user_for_getting, user_who_get",
+    [
+        (
             {
                 "user_id": uuid4(),
                 "name": "Nikolai",
@@ -204,8 +204,8 @@ async def test_get_user_by_privilage_roles(
                 "password": "SampleHashedPass",
                 "roles": [PortalRole.ROLE_PORTAL_USER],
             },
-    ),
-    (
+        ),
+        (
             {
                 "user_id": uuid4(),
                 "name": "Nikolai",
@@ -230,7 +230,7 @@ async def test_get_user_by_privilage_roles(
                     PortalRole.ROLE_PORTAL_ADMIN,
                 ],
             },
-    ),
+        ),
         (
             {
                 "user_id": uuid4(),
@@ -256,18 +256,19 @@ async def test_get_user_by_privilage_roles(
                     PortalRole.ROLE_PORTAL_ADMIN,
                 ],
             },
-    ),
-])
+        ),
+    ],
+)
 async def test_get_another_user_error(
-        client,
-        create_user_in_database,
-        user_for_getting,
-        user_who_get,
+    client,
+    create_user_in_database,
+    user_for_getting,
+    user_who_get,
 ):
     await create_user_in_database(user_for_getting)
     await create_user_in_database(user_who_get)
     reps = client.get(
         f"/user/?user_id={user_for_getting['user_id']}",
-        headers=await create_test_auth_headers_for_user(user_who_get["email"])
+        headers=await create_test_auth_headers_for_user(user_who_get["email"]),
     )
     assert reps.status_code == 403

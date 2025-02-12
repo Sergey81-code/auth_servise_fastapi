@@ -475,7 +475,6 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     assert resp.json() == {"detail": "Not authenticated"}
 
 
-
 @pytest.mark.parametrize(
     "user_role_list",
     [
@@ -485,7 +484,7 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     ],
 )
 async def test_update_user_by_privilage_roles(
-        client, create_user_in_database, get_user_from_database, user_role_list
+    client, create_user_in_database, get_user_from_database, user_role_list
 ):
     user_data_for_updating = {
         "user_id": uuid4(),
@@ -494,7 +493,7 @@ async def test_update_user_by_privilage_roles(
         "email": "lol@kek.com",
         "password": "Abcd12!@",
         "is_active": True,
-        "roles": [PortalRole.ROLE_PORTAL_USER]
+        "roles": [PortalRole.ROLE_PORTAL_USER],
     }
     user_data_updated = {
         "old_password": user_data_for_updating["password"],
@@ -518,7 +517,7 @@ async def test_update_user_by_privilage_roles(
     resp = client.patch(
         f"/user/?user_id={user_data_for_updating['user_id']}",
         json=user_data_updated,
-        headers=await create_test_auth_headers_for_user(user_who_update['email'])
+        headers=await create_test_auth_headers_for_user(user_who_update["email"]),
     )
     assert resp.status_code == 200
     resp_data = resp.json()
@@ -536,8 +535,10 @@ async def test_update_user_by_privilage_roles(
     assert user_from_db["is_active"] is user_data_for_updating["is_active"]
 
 
-@pytest.mark.parametrize("user_data_for_updating, user_who_update", [
-    (
+@pytest.mark.parametrize(
+    "user_data_for_updating, user_who_update",
+    [
+        (
             {
                 "user_id": uuid4(),
                 "name": "Nikolai",
@@ -556,8 +557,8 @@ async def test_update_user_by_privilage_roles(
                 "password": "SampleHashedPass",
                 "roles": [PortalRole.ROLE_PORTAL_USER],
             },
-    ),
-    (
+        ),
+        (
             {
                 "user_id": uuid4(),
                 "name": "Nikolai",
@@ -582,7 +583,7 @@ async def test_update_user_by_privilage_roles(
                     PortalRole.ROLE_PORTAL_ADMIN,
                 ],
             },
-    ),
+        ),
         (
             {
                 "user_id": uuid4(),
@@ -608,13 +609,14 @@ async def test_update_user_by_privilage_roles(
                     PortalRole.ROLE_PORTAL_ADMIN,
                 ],
             },
-    ),
-])
+        ),
+    ],
+)
 async def test_update_another_user_error(
-        client,
-        create_user_in_database,
-        user_data_for_updating,
-        user_who_update,
+    client,
+    create_user_in_database,
+    user_data_for_updating,
+    user_who_update,
 ):
     user_data_updated = {
         "old_password": user_data_for_updating["password"],
@@ -628,6 +630,6 @@ async def test_update_another_user_error(
     reps = client.patch(
         f"/user/?user_id={user_data_for_updating['user_id']}",
         json=user_data_updated,
-        headers=await create_test_auth_headers_for_user(user_who_update["email"])
+        headers=await create_test_auth_headers_for_user(user_who_update["email"]),
     )
     assert reps.status_code == 403

@@ -20,7 +20,4 @@ class AuthExceptionService:
 
     @staticmethod
     def incorrect_password_validation(message: str):
-        raise HTTPException(
-            status_code=422,
-            detail=message
-        )
+        raise HTTPException(status_code=422, detail=message)

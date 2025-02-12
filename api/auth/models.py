@@ -19,8 +19,10 @@ class LoginUser(BaseModel):
     @field_validator("password")
     def validate_password(cls, value):
         if not PASSWORD_REGEX.match(value):
-            AuthExceptionService.incorrect_password_validation("Password must be 8-16 characters long, \
-                                                                contain uppercase and lowercase letters, numbers, and special characters.")
+            AuthExceptionService.incorrect_password_validation(
+                "Password must be 8-16 characters long, \
+                                                                contain uppercase and lowercase letters, numbers, and special characters."
+            )
         return value
 
 
