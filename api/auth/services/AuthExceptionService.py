@@ -12,8 +12,15 @@ class AuthExceptionService:
         )
 
     @staticmethod
-    def unauthorized_exception(message: str):
+    def unauthorized_exception(message: str = "Incorrect username or password"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=message,
+        )
+
+    @staticmethod
+    def incorrect_password_validation(message: str):
+        raise HTTPException(
+            status_code=422,
+            detail=message
         )

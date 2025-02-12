@@ -128,9 +128,7 @@ async def create_user_in_database(asyncpg_pool):
                 user["email"],
                 user["is_active"],
                 Hasher.get_password_hash(user["password"]),
-                [
-                    PortalRole.ROLE_PORTAL_USER,
-                ],
+                user.get("roles", [PortalRole.ROLE_PORTAL_USER]),
             )
 
     return create_user_in_database

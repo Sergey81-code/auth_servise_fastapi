@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class PortalRole(str, Enum):
+class PortalRole(StrEnum):
     ROLE_PORTAL_USER = "ROLE_PORTAL_USER"
     ROLE_PORTAL_ADMIN = "ROLE_PORTAL_ADMIN"
     ROLE_PORTAL_SUPERADMIN = "ROLE_PORTAL_SUPERADMIN"

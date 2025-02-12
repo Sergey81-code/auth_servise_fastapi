@@ -1,8 +1,6 @@
 from datetime import timedelta
 
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,10 +25,7 @@ class AuthService:
     async def create(cls, email: str, password: str, session: AsyncSession):
         user = await cls._authenticate_user(email, password, session)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-            )
+            AuthExceptionService.unauthorized_exception("Incorrect username or password")
         return cls(user, session)
 
     @staticmethod

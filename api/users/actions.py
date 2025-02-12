@@ -104,3 +104,32 @@ async def get_user_by_email_action(email: str, session: AsyncSession) -> User | 
         user_dal = UserDAL(session)
         user = await user_dal.get_user_by_email(email=email)
         return user
+
+
+
+async def check_user_permissions(target_user: User, current_user: User) -> bool:
+    if target_user == current_user:
+        return True
+    
+    if PortalRole.ROLE_PORTAL_SUPERADMIN in target_user.roles:
+        return False
+    
+    if PortalRole.ROLE_PORTAL_SUPERADMIN in current_user.roles:
+        return True
+    
+    if (PortalRole.ROLE_PORTAL_ADMIN in current_user.roles and\
+            PortalRole.ROLE_PORTAL_ADMIN not in target_user.roles):
+        return True
+    
+    return False
+
+
+async def fetch_user_or_raise(user_id: UUID, current_user_roles: list, session: AsyncSession) -> User:
+    target_user = await get_user_by_id_action(user_id, session)
+    if target_user is None:
+        if PortalRole.ROLE_PORTAL_ADMIN in current_user_roles or PortalRole.ROLE_PORTAL_SUPERADMIN in current_user_roles:
+            raise HTTPException(
+                status_code=404, detail=f"User with id {user_id} not found."
+            )
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return target_user

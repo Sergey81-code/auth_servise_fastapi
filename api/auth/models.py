@@ -1,9 +1,10 @@
 import re
 
-from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import field_validator
+
+from api.auth.services.AuthExceptionService import AuthExceptionService
 
 
 PASSWORD_REGEX = re.compile(
@@ -18,10 +19,8 @@ class LoginUser(BaseModel):
     @field_validator("password")
     def validate_password(cls, value):
         if not PASSWORD_REGEX.match(value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.",
-            )
+            AuthExceptionService.incorrect_password_validation("Password must be 8-16 characters long, \
+                                                                contain uppercase and lowercase letters, numbers, and special characters.")
         return value
 
 

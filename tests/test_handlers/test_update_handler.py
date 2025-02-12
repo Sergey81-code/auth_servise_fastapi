@@ -5,6 +5,7 @@ import pytest
 
 from tests.conftest import create_test_auth_headers_for_user
 from utils.hashing import Hasher
+from utils.roles import PortalRole
 
 
 async def test_update_user(client, create_user_in_database, get_user_from_database):
@@ -338,6 +339,7 @@ async def test_update_user_not_found_error(client, create_user_in_database):
         "email": "lol@kek.com",
         "password": "Abcd12!@",
         "is_active": True,
+        "roles": [PortalRole.ROLE_PORTAL_USER, PortalRole.ROLE_PORTAL_SUPERADMIN],
     }
     await create_user_in_database(user_data)
     user_data_updated = {
@@ -471,3 +473,161 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     )
     assert resp.status_code == 401
     assert resp.json() == {"detail": "Not authenticated"}
+
+
+
+@pytest.mark.parametrize(
+    "user_role_list",
+    [
+        [PortalRole.ROLE_PORTAL_USER, PortalRole.ROLE_PORTAL_ADMIN],
+        [PortalRole.ROLE_PORTAL_USER, PortalRole.ROLE_PORTAL_SUPERADMIN],
+        [PortalRole.ROLE_PORTAL_ADMIN, PortalRole.ROLE_PORTAL_SUPERADMIN],
+    ],
+)
+async def test_update_user_by_privilage_roles(
+        client, create_user_in_database, get_user_from_database, user_role_list
+):
+    user_data_for_updating = {
+        "user_id": uuid4(),
+        "name": "Nikolai",
+        "surname": "Sviridov",
+        "email": "lol@kek.com",
+        "password": "Abcd12!@",
+        "is_active": True,
+        "roles": [PortalRole.ROLE_PORTAL_USER]
+    }
+    user_data_updated = {
+        "old_password": user_data_for_updating["password"],
+        "name": "Ivan",
+        "surname": "Ivanov",
+        "email": "cheburek@kek.com",
+        "new_password": "Abcd12!@1",
+    }
+    user_who_update = {
+        "user_id": uuid4(),
+        "name": "Nikolai",
+        "surname": "Sviridov",
+        "email": "lol1@kek.com",
+        "password": "Abcd12!@",
+        "is_active": True,
+        "roles": user_role_list,
+    }
+
+    await create_user_in_database(user_data_for_updating)
+    await create_user_in_database(user_who_update)
+    resp = client.patch(
+        f"/user/?user_id={user_data_for_updating['user_id']}",
+        json=user_data_updated,
+        headers=await create_test_auth_headers_for_user(user_who_update['email'])
+    )
+    assert resp.status_code == 200
+    resp_data = resp.json()
+    assert resp_data["updated_user_id"] == str(user_data_for_updating["user_id"])
+    users_from_db = await get_user_from_database(user_data_for_updating["user_id"])
+    assert len(users_from_db) == 1
+    user_from_db = dict(users_from_db[0])
+    assert user_from_db["user_id"] == user_data_for_updating["user_id"]
+    assert user_from_db["name"] == user_data_updated["name"]
+    assert user_from_db["surname"] == user_data_updated["surname"]
+    assert user_from_db["email"] == user_data_updated["email"]
+    assert Hasher.verify_password(
+        user_data_updated["new_password"], user_from_db["hashed_password"]
+    )
+    assert user_from_db["is_active"] is user_data_for_updating["is_active"]
+
+
+@pytest.mark.parametrize("user_data_for_updating, user_who_update", [
+    (
+            {
+                "user_id": uuid4(),
+                "name": "Nikolai",
+                "surname": "Sviridov",
+                "email": "lol@kek.com",
+                "is_active": True,
+                "password": "SampleHashedPass",
+                "roles": [PortalRole.ROLE_PORTAL_USER],
+            },
+            {
+                "user_id": uuid4(),
+                "name": "Admin",
+                "surname": "Adminov",
+                "email": "admin@kek.com",
+                "is_active": True,
+                "password": "SampleHashedPass",
+                "roles": [PortalRole.ROLE_PORTAL_USER],
+            },
+    ),
+    (
+            {
+                "user_id": uuid4(),
+                "name": "Nikolai",
+                "surname": "Sviridov",
+                "email": "lol@kek.com",
+                "is_active": True,
+                "password": "SampleHashedPass",
+                "roles": [
+                    PortalRole.ROLE_PORTAL_USER,
+                    PortalRole.ROLE_PORTAL_SUPERADMIN,
+                ],
+            },
+            {
+                "user_id": uuid4(),
+                "name": "Admin",
+                "surname": "Adminov",
+                "email": "admin@kek.com",
+                "is_active": True,
+                "password": "SampleHashedPass",
+                "roles": [
+                    PortalRole.ROLE_PORTAL_USER,
+                    PortalRole.ROLE_PORTAL_ADMIN,
+                ],
+            },
+    ),
+        (
+            {
+                "user_id": uuid4(),
+                "name": "Nikolai",
+                "surname": "Sviridov",
+                "email": "lol@kek.com",
+                "is_active": True,
+                "password": "SampleHashedPass",
+                "roles": [
+                    PortalRole.ROLE_PORTAL_USER,
+                    PortalRole.ROLE_PORTAL_ADMIN,
+                ],
+            },
+            {
+                "user_id": uuid4(),
+                "name": "Admin",
+                "surname": "Adminov",
+                "email": "admin@kek.com",
+                "is_active": True,
+                "password": "SampleHashedPass",
+                "roles": [
+                    PortalRole.ROLE_PORTAL_USER,
+                    PortalRole.ROLE_PORTAL_ADMIN,
+                ],
+            },
+    ),
+])
+async def test_update_another_user_error(
+        client,
+        create_user_in_database,
+        user_data_for_updating,
+        user_who_update,
+):
+    user_data_updated = {
+        "old_password": user_data_for_updating["password"],
+        "name": "Ivan",
+        "surname": "Ivanov",
+        "email": "cheburek@kek.com",
+        "new_password": "Abcd12!@1",
+    }
+    await create_user_in_database(user_data_for_updating)
+    await create_user_in_database(user_who_update)
+    reps = client.patch(
+        f"/user/?user_id={user_data_for_updating['user_id']}",
+        json=user_data_updated,
+        headers=await create_test_auth_headers_for_user(user_who_update["email"])
+    )
+    assert reps.status_code == 403
