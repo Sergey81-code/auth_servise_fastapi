@@ -1,7 +1,7 @@
 import asyncio
+import os
 import re
 import sys
-import os
 
 from sqlalchemy import select
 
@@ -19,6 +19,7 @@ def is_valid_email(email: str) -> bool:
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email) is not None
 
+
 def is_valid_password(password: str) -> bool:
     """Checks if the password meets security requirements."""
     if len(password) < 8:
@@ -34,7 +35,6 @@ def is_valid_password(password: str) -> bool:
     return True
 
 
-
 async def prompt_for_superadmin_credentials():
     while True:
         email = input("Enter email: ").strip()
@@ -43,7 +43,9 @@ async def prompt_for_superadmin_credentials():
             sys.exit(0)
         if is_valid_email(email):
             break
-        print("Invalid email format. Please enter a valid email. Type 'exit' or 'exit()' to exit the program.")
+        print(
+            "Invalid email format. Please enter a valid email. Type 'exit' or 'exit()' to exit the program."
+        )
 
     while True:
         password = input("Enter password: ").strip()
@@ -52,7 +54,9 @@ async def prompt_for_superadmin_credentials():
             sys.exit(0)
         if is_valid_password(password):
             break
-        print("Password must be at least 8 characters long and contain uppercase and lowercase letters, numbers, and special characters. Type 'exit' or 'exit()' to exit the program.")
+        print(
+            "Password must be at least 8 characters long and contain uppercase and lowercase letters, numbers, and special characters. Type 'exit' or 'exit()' to exit the program."
+        )
 
     name = input("Enter name (default: 'Super'): ").strip() or "Super"
     surname = input("Enter surname (default: 'Admin'): ").strip() or "Admin"
@@ -60,22 +64,17 @@ async def prompt_for_superadmin_credentials():
     async for session in get_session():
         await create_superadmin(email, password, name, surname, session)
 
-    
-
-
 
 async def create_superadmin(email, password, name, surname, session):
     """Create a superadmin in the database"""
 
     async with session.begin():
-        exists = await session.execute(
-            select(User).where(User.email == email)
-        )
+        exists = await session.execute(select(User).where(User.email == email))
         user = exists.scalar_one_or_none()
 
         if user:
             print("Error: A user with this email already exists.")
-            return 
+            return
 
         new_superuser = User(
             user_id=uuid4(),
@@ -91,7 +90,7 @@ async def create_superadmin(email, password, name, surname, session):
             session.add(new_superuser)
             await session.commit()
             print(f"Superadmin {email} was created successfully!")
-        except TypeError as e:
+        except TypeError:
             print("Error: possibly an incorrect argument name in the User model.")
         except Exception as e:
             print(f"Unexpected error: {e}")
