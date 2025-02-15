@@ -14,8 +14,10 @@ from db.session import get_session
 from utils.hashing import Hasher
 from utils.roles import PortalRole
 
+
 def get_password(message):
     return getpass(message).strip()
+
 
 def is_valid_email(email: str) -> bool:
     """Checks if the email matches the format."""
@@ -60,7 +62,7 @@ async def prompt_for_superadmin_credentials():
         print(
             "Password must be at least 8 characters long and contain uppercase and lowercase letters, numbers, and special characters. Type 'exit' or 'exit()' to exit the program."
         )
-    
+
     while True:
         password2 = get_password("Repeat password: ")
         if password.lower() == "exit" or password == "exit()":

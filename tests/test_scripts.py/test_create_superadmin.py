@@ -12,10 +12,9 @@ from scripts.create_superadmin import prompt_for_superadmin_credentials
 from utils.hashing import Hasher
 from utils.roles import PortalRole
 
+
 @patch("scripts.create_superadmin.get_password", return_value="StrongPass1!")
-@patch(
-    "builtins.input", side_effect=["test@example.com", "Super", "Admin"]
-)
+@patch("builtins.input", side_effect=["test@example.com", "Super", "Admin"])
 async def test_prompt_for_superadmin_credentials(mock_getpass, mock_input):
     with patch(
         "scripts.create_superadmin.create_superadmin", new_callable=AsyncMock
@@ -24,6 +23,7 @@ async def test_prompt_for_superadmin_credentials(mock_getpass, mock_input):
         mock_create_superadmin.assert_called_once_with(
             "test@example.com", "StrongPass1!", "Super", "Admin", ANY
         )
+
 
 @patch("scripts.create_superadmin.get_password", return_value="StrongPass1!")
 async def test_prompt_for_superadmin_credentials_invalid_email(mock_getpass):
@@ -44,7 +44,10 @@ async def test_prompt_for_superadmin_credentials_invalid_email(mock_getpass):
         )
 
 
-@patch("scripts.create_superadmin.get_password", side_effect=["invalid-password", "StrongPass1!", "StrongPass1!"])
+@patch(
+    "scripts.create_superadmin.get_password",
+    side_effect=["invalid-password", "StrongPass1!", "StrongPass1!"],
+)
 async def test_prompt_for_superadmin_credentials_invalid_password(mock_getpass):
     with patch(
         "builtins.input",
@@ -62,7 +65,10 @@ async def test_prompt_for_superadmin_credentials_invalid_password(mock_getpass):
         )
 
 
-@patch("scripts.create_superadmin.get_password", side_effect=["StrongPass1!","StrongPass2!","StrongPass1!"])
+@patch(
+    "scripts.create_superadmin.get_password",
+    side_effect=["StrongPass1!", "StrongPass2!", "StrongPass1!"],
+)
 async def test_prompt_for_superadmin_credentials_passwords_do_not_match(mock_getpass):
     with patch(
         "builtins.input",
