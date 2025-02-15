@@ -25,8 +25,7 @@ class JWTService:
             expires_delta or datetime.timedelta(minutes=token_time)
         )
         to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, token_key, algorithm=settings.ALGORITHM)
-        return encoded_jwt
+        return jwt.encode(to_encode, token_key, algorithm=settings.ALGORITHM)
 
     @staticmethod
     async def decode_jwt_token(token: str, token_type: str) -> dict[str, str]:

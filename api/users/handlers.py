@@ -8,12 +8,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.services.AuthService import AuthService
-from api.users.actions import activate_user_action, grant_admin_privilege_action, revoke_admin_privilege_action, update_user_action
+from api.users.actions import activate_user_action
 from api.users.actions import check_user_permissions
 from api.users.actions import create_new_user_action
 from api.users.actions import delete_user_action
 from api.users.actions import fetch_user_or_raise
+from api.users.actions import grant_admin_privilege_action
 from api.users.actions import process_user_update_request_action
+from api.users.actions import revoke_admin_privilege_action
 from api.users.schemas import ActivateUserResponse
 from api.users.schemas import DeleteUserResponse
 from api.users.schemas import ShowUser
@@ -54,10 +56,7 @@ async def delete_user(
     session: AsyncSession = Depends(get_session),
 ) -> DeleteUserResponse:
     target_user = await fetch_user_or_raise(user_id, current_user, session)
-    if (
-        target_user == current_user
-        and current_user.is_superadmin
-    ):
+    if target_user == current_user and current_user.is_superadmin:
         raise HTTPException(
             status_code=406, detail="Superadmin cannot be deleted via API."
         )
@@ -126,14 +125,13 @@ async def update_user_by_id(
         raise HTTPException(status_code=403, detail="Forbidden.")
 
     try:
-        updated_user_id = await process_user_update_request_action(user_id, body, session)
+        updated_user_id = await process_user_update_request_action(
+            user_id, body, session
+        )
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
     return UpdatedUserResponse(updated_user_id=updated_user_id)
-
-
-
 
 
 @user_router.patch("/admin_privilege", response_model=UpdatedUserResponse)

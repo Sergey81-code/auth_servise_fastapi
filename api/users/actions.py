@@ -12,7 +12,6 @@ from utils.hashing import Hasher
 from utils.roles import PortalRole
 
 
-
 async def create_new_user_action(body: UserCreate, session: AsyncSession) -> User:
     async with session.begin():
         return await UserDAL(session).create_user(
@@ -39,13 +38,15 @@ async def activate_user_action(user_id: UUID, session: AsyncSession) -> UUID | N
 
 
 async def process_user_update_request_action(
-   user_id: UUID, updated_user_params: UpdateUserRequest, session: AsyncSession
+    user_id: UUID, updated_user_params: UpdateUserRequest, session: AsyncSession
 ) -> UUID | None:
     updated_params = updated_user_params.model_dump(exclude_none=True)
     user = await get_user_by_id_action(user_id, session)
 
     old_password = updated_params.pop("old_password", None)
-    if not old_password or not Hasher.verify_password(old_password, user.hashed_password):
+    if not old_password or not Hasher.verify_password(
+        old_password, user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
@@ -56,7 +57,7 @@ async def process_user_update_request_action(
             status_code=422,
             detail="At least one parameter for user update info should be proveded",
         )
-    
+
     if new_password := updated_params.pop("new_password", None):
         updated_params["hashed_password"] = Hasher.get_password_hash(new_password)
 
@@ -74,15 +75,12 @@ async def update_user_action(
 
 async def get_user_by_id_action(user_id: UUID, session: AsyncSession) -> User | None:
     async with session.begin():
-        user_dal = UserDAL(session)
-        return await user_dal.get_user_by_id(user_id)
+        return await UserDAL(session).get_user_by_id(user_id)
 
 
 async def get_user_by_email_action(email: str, session: AsyncSession) -> User | None:
     async with session.begin():
-        user_dal = UserDAL(session)
-        user = await user_dal.get_user_by_email(email=email)
-        return user
+        return await UserDAL(session).get_user_by_email(email=email)
 
 
 async def fetch_user_or_raise(
@@ -108,7 +106,9 @@ async def check_user_permissions(target_user: User, current_user: User) -> bool:
             return target_user == current_user
 
 
-async def grant_admin_privilege_action(user_id: UUID, current_user: User, session: AsyncSession) -> UUID | None:
+async def grant_admin_privilege_action(
+    user_id: UUID, current_user: User, session: AsyncSession
+) -> UUID | None:
     if current_user.user_id == user_id:
         raise HTTPException(
             status_code=400, detail="Cannot manage privileges of itself."
@@ -126,7 +126,9 @@ async def grant_admin_privilege_action(user_id: UUID, current_user: User, sessio
     )
 
 
-async def revoke_admin_privilege_action(user_id: UUID, current_user: User, session: AsyncSession) -> UUID | None:
+async def revoke_admin_privilege_action(
+    user_id: UUID, current_user: User, session: AsyncSession
+) -> UUID | None:
     if current_user.user_id == user_id:
         raise HTTPException(
             status_code=400, detail="Cannot manage privileges of itself."
