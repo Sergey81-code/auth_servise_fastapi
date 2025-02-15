@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
-from api.auth.handler import login_router
-from api.users.handler import user_router
+from api.auth.handlers import login_router
+from api.users.handlers import user_router
 
 app = FastAPI(title="my-fastapi")
 

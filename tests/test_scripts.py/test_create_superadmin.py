@@ -44,7 +44,7 @@ async def test_prompt_for_superadmin_credentials_invalid_email(mock_getpass):
         )
 
 
-@patch("scripts.create_superadmin.get_password", side_effect=["invalid-password","StrongPass1!"])
+@patch("scripts.create_superadmin.get_password", side_effect=["invalid-password", "StrongPass1!", "StrongPass1!"])
 async def test_prompt_for_superadmin_credentials_invalid_password(mock_getpass):
     with patch(
         "builtins.input",

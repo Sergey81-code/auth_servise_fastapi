@@ -26,7 +26,7 @@ class UserDAL:
             surname=surname,
             email=email,
             hashed_password=hashed_password,
-            roles=[roles],
+            roles=roles,
         )
         self.db_session.add(new_user)
         await self.db_session.commit()

@@ -8,21 +8,21 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.auth.services.AuthService import AuthService
-from api.users.actions import activate_user_action
+from api.users.actions import activate_user_action, grant_admin_privilege_action, revoke_admin_privilege_action, update_user_action
 from api.users.actions import check_user_permissions
 from api.users.actions import create_new_user_action
 from api.users.actions import delete_user_action
 from api.users.actions import fetch_user_or_raise
-from api.users.actions import update_user_action
-from api.users.models import ActivateUserResponse
-from api.users.models import DeleteUserResponse
-from api.users.models import ShowUser
-from api.users.models import UpdatedUserResponse
-from api.users.models import UpdateUserRequest
-from api.users.models import UserCreate
+from api.users.actions import process_user_update_request_action
+from api.users.schemas import ActivateUserResponse
+from api.users.schemas import DeleteUserResponse
+from api.users.schemas import ShowUser
+from api.users.schemas import UpdatedUserResponse
+from api.users.schemas import UpdateUserRequest
+from api.users.schemas import UserCreate
 from db.models import User
 from db.session import get_session
-from utils.roles import PortalRole
+from utils.decorators import only_superadmin
 
 logger = getLogger(__name__)
 
@@ -53,10 +53,10 @@ async def delete_user(
     current_user: User = Depends(AuthService.get_current_user_from_access_token),
     session: AsyncSession = Depends(get_session),
 ) -> DeleteUserResponse:
-    target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
+    target_user = await fetch_user_or_raise(user_id, current_user, session)
     if (
         target_user == current_user
-        and PortalRole.ROLE_PORTAL_SUPERADMIN in current_user.roles
+        and current_user.is_superadmin
     ):
         raise HTTPException(
             status_code=406, detail="Superadmin cannot be deleted via API."
@@ -81,7 +81,7 @@ async def activate_user(
     current_user: User = Depends(AuthService.get_current_user_from_access_token),
     session: AsyncSession = Depends(get_session),
 ) -> ActivateUserResponse:
-    target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
+    target_user = await fetch_user_or_raise(user_id, current_user, session)
     if not await check_user_permissions(
         target_user=target_user, current_user=current_user
     ):
@@ -97,7 +97,7 @@ async def get_user_by_id(
     current_user: User = Depends(AuthService.get_current_user_from_access_token),
     session: AsyncSession = Depends(get_session),
 ) -> ShowUser:
-    target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
+    target_user = await fetch_user_or_raise(user_id, current_user, session)
     if not await check_user_permissions(
         target_user=target_user, current_user=current_user
     ):
@@ -119,14 +119,55 @@ async def update_user_by_id(
     current_user: User = Depends(AuthService.get_current_user_from_access_token),
     session: AsyncSession = Depends(get_session),
 ) -> UpdatedUserResponse:
-    target_user = await fetch_user_or_raise(user_id, current_user.roles, session)
+    target_user = await fetch_user_or_raise(user_id, current_user, session)
     if not await check_user_permissions(
         target_user=target_user, current_user=current_user
     ):
         raise HTTPException(status_code=403, detail="Forbidden.")
 
     try:
-        updated_user_id = await update_user_action(user_id, body, session)
+        updated_user_id = await process_user_update_request_action(user_id, body, session)
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f"Database error: {err}")
+    return UpdatedUserResponse(updated_user_id=updated_user_id)
+
+
+
+
+
+@user_router.patch("/admin_privilege", response_model=UpdatedUserResponse)
+@only_superadmin
+async def grant_admin_privilege(
+    user_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(AuthService.get_current_user_from_access_token),
+):
+    try:
+        updated_user_id = await grant_admin_privilege_action(
+            user_id=user_id,
+            current_user=current_user,
+            session=session,
+        )
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f"Database error: {err}")
+    return UpdatedUserResponse(updated_user_id=updated_user_id)
+
+
+@user_router.delete("/admin_privilege", response_model=UpdatedUserResponse)
+@only_superadmin
+async def revoke_admin_privilege(
+    user_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(AuthService.get_current_user_from_access_token),
+):
+    try:
+        updated_user_id = await revoke_admin_privilege_action(
+            user_id=user_id,
+            current_user=current_user,
+            session=session,
+        )
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
