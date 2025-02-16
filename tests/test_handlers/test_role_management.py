@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 
 from tests.conftest import create_test_auth_headers_for_user
+from tests.conftest import USER_URL
 from utils.roles import PortalRole
 
 
@@ -31,7 +32,7 @@ async def test_add_admin_role_to_user_by_superadmin(
     await create_user_in_database(user_data_who_promoted)
 
     resp = client.patch(
-        f"/user/admin_privilege/?user_id={user_data_for_promotion["user_id"]}",
+        f"{USER_URL}admin_privilege/?user_id={user_data_for_promotion["user_id"]}",
         headers=await create_test_auth_headers_for_user(
             user_data_who_promoted["email"]
         ),
@@ -75,7 +76,7 @@ async def test_add_admin_role_to_user_by_superadmin_invalid_id_error(
     invalid_user_id = "123"
 
     resp = client.patch(
-        f"/user/admin_privilege/?user_id={invalid_user_id}",
+        f"{USER_URL}admin_privilege/?user_id={invalid_user_id}",
         headers=await create_test_auth_headers_for_user(
             user_data_who_promoted["email"]
         ),
@@ -129,7 +130,7 @@ async def test_add_admin_role_to_user_by_superadmin_non_existent_id_error(
     non_existent_user_id = uuid4()
 
     resp = client.patch(
-        f"/user/admin_privilege/?user_id={non_existent_user_id}",
+        f"{USER_URL}admin_privilege/?user_id={non_existent_user_id}",
         headers=await create_test_auth_headers_for_user(
             user_data_who_promoted["email"]
         ),
@@ -160,7 +161,7 @@ async def test_add_admin_role_to_user_by_superadmin_promote_itself_error(
     await create_user_in_database(user_data)
 
     resp = client.patch(
-        f"/user/admin_privilege/?user_id={user_data['user_id']}",
+        f"{USER_URL}admin_privilege/?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
 
@@ -227,7 +228,7 @@ async def test_invalid_admin_privilege_assignment(
     await create_user_in_database(user_who_promoted_data)
 
     resp = client.patch(
-        f"/user/admin_privilege/?user_id={user_for_promotion_data['user_id']}",
+        f"{USER_URL}admin_privilege/?user_id={user_for_promotion_data['user_id']}",
         headers=await create_test_auth_headers_for_user(
             user_who_promoted_data["email"]
         ),
@@ -262,7 +263,7 @@ async def test_revoke_admin_role_to_user_by_superadmin(
     await create_user_in_database(user_data_who_promoted)
 
     resp = client.delete(
-        f"/user/admin_privilege/?user_id={user_data_for_promotion["user_id"]}",
+        f"{USER_URL}admin_privilege/?user_id={user_data_for_promotion["user_id"]}",
         headers=await create_test_auth_headers_for_user(
             user_data_who_promoted["email"]
         ),
@@ -306,7 +307,7 @@ async def test_revoke_admin_role_to_user_by_superadmin_invalid_id_error(
     invalid_user_id = "123"
 
     resp = client.delete(
-        f"/user/admin_privilege/?user_id={invalid_user_id}",
+        f"{USER_URL}admin_privilege/?user_id={invalid_user_id}",
         headers=await create_test_auth_headers_for_user(
             user_data_who_promoted["email"]
         ),
@@ -360,7 +361,7 @@ async def test_revoke_admin_role_to_user_by_superadmin_non_existent_id_error(
     non_existent_user_id = uuid4()
 
     resp = client.delete(
-        f"/user/admin_privilege/?user_id={non_existent_user_id}",
+        f"{USER_URL}admin_privilege/?user_id={non_existent_user_id}",
         headers=await create_test_auth_headers_for_user(
             user_data_who_promoted["email"]
         ),
@@ -391,7 +392,7 @@ async def test_revoke_admin_role_to_user_by_superadmin_promote_itself_error(
     await create_user_in_database(user_data)
 
     resp = client.delete(
-        f"/user/admin_privilege/?user_id={user_data['user_id']}",
+        f"{USER_URL}admin_privilege/?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
 
@@ -456,7 +457,7 @@ async def test_invalid_admin_privilege_revocation(
     await create_user_in_database(user_who_promoted_data)
 
     resp = client.delete(
-        f"/user/admin_privilege/?user_id={user_for_promotion_data['user_id']}",
+        f"{USER_URL}admin_privilege/?user_id={user_for_promotion_data['user_id']}",
         headers=await create_test_auth_headers_for_user(
             user_who_promoted_data["email"]
         ),

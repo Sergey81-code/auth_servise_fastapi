@@ -24,6 +24,9 @@ from utils.hashing import Hasher
 from utils.roles import PortalRole
 
 
+USER_URL = "/users/"
+LOGIN_URL = "/login/"
+
 test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
 
 test_async_session = sessionmaker(

@@ -75,15 +75,12 @@ async def update_user_action(
 
 async def get_user_by_id_action(user_id: UUID, session: AsyncSession) -> User | None:
     async with session.begin():
-        user_dal = UserDAL(session)
-        return await user_dal.get_user_by_id(user_id)
+        return await UserDAL(session).get_user_by_id(user_id)
 
 
 async def get_user_by_email_action(email: str, session: AsyncSession) -> User | None:
     async with session.begin():
-        user_dal = UserDAL(session)
-        user = await user_dal.get_user_by_email(email=email)
-        return user
+        return await UserDAL(session).get_user_by_email(email=email)
 
 
 async def fetch_user_or_raise(
@@ -100,13 +97,15 @@ async def fetch_user_or_raise(
 
 
 async def check_user_permissions(target_user: User, current_user: User) -> bool:
-    match (current_user.is_superadmin, current_user.is_admin, target_user.is_admin):
-        case (True, _, _):
-            return True
-        case (_, True, False):
-            return True
-        case (_, _, _):
-            return target_user == current_user
+    if target_user == current_user:
+        return True
+    if target_user.is_superadmin:
+        return False
+    if current_user.is_superadmin:
+        return True
+    if current_user.is_admin and not target_user.is_admin:
+        return True
+    return False
 
 
 async def grant_admin_privilege_action(

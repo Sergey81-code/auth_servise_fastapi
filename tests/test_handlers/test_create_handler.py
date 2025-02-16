@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.conftest import USER_URL
 from utils.hashing import Hasher
 
 
@@ -12,7 +13,7 @@ async def test_create_user(client, get_user_from_database):
         "email": "lol@kek.com",
         "password": "Abcd12!@",
     }
-    resp = client.post("/user/", json=user_data)
+    resp = client.post(f"{USER_URL}", json=user_data)
     data_from_resp = resp.json()
     assert resp.status_code == 200
     assert data_from_resp["name"] == user_data["name"]
@@ -48,7 +49,7 @@ async def test_create_user_dublicate_email_error(client, create_user_in_database
         "password": "Abcd12!@",
     }
     await create_user_in_database(user_data)
-    resp = client.post("/user/", json=user_data_same_email)
+    resp = client.post(f"{USER_URL}", json=user_data_same_email)
     assert resp.status_code == 503
     assert (
         'duplicate key value violates unique constraint "users_email_key"'
@@ -177,7 +178,7 @@ async def test_create_user_validation_error(
     expected_status_code,
     expected_detail,
 ):
-    resp = client.post("/user/", json=user_data)
+    resp = client.post(f"{USER_URL}", json=user_data)
     assert resp.status_code == expected_status_code
     resp_data = resp.json()
     assert resp_data == expected_detail

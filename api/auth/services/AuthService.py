@@ -42,33 +42,30 @@ class AuthService:
 
     async def create_access_token(self):
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await JWTService.create_jwt_token(
+        return await JWTService.create_jwt_token(
             data={"sub": self.user.email, "other_custom_data": [1, 2, 3, 4]},
             token_type="access",
             expires_delta=access_token_expires,
         )
-        return access_token
 
     async def create_refresh_token(self):
         refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-        refresh_token = await JWTService.create_jwt_token(
+        return await JWTService.create_jwt_token(
             data={"sub": self.user.email, "other_custom_data": [1, 2, 3, 4]},
             token_type="refresh",
             expires_delta=refresh_token_expires,
         )
-        return refresh_token
 
     @staticmethod
     async def create_access_token_from_refresh(refresh_token: str):
         payload = await JWTService.decode_jwt_token(refresh_token, "refresh")
         email: str = payload.get("sub")
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await JWTService.create_jwt_token(
+        return await JWTService.create_jwt_token(
             data={"sub": email, "other_custom_data": [1, 2, 3, 4]},
             token_type="access",
             expires_delta=access_token_expires,
         )
-        return access_token
 
     @staticmethod
     async def get_current_user_from_access_token(

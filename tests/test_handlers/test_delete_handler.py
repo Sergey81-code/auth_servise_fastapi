@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 
 from tests.conftest import create_test_auth_headers_for_user
+from tests.conftest import USER_URL
 from utils.roles import PortalRole
 
 
@@ -17,7 +18,7 @@ async def test_delete_user(client, create_user_in_database, get_user_from_databa
     }
     await create_user_in_database(user_data)
     resp = client.delete(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 200
@@ -42,7 +43,7 @@ async def test_delete_user_id_validation_error(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.delete(
-        "/user/?user_id=123",
+        f"{USER_URL}?user_id=123",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 422
@@ -75,7 +76,7 @@ async def test_delete_user_not_found_error(client, create_user_in_database):
     await create_user_in_database(user_data)
     user_id_not_exist = uuid4()
     resp = client.delete(
-        f"/user/?user_id={user_id_not_exist}",
+        f"{USER_URL}?user_id={user_id_not_exist}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 404
@@ -96,7 +97,7 @@ async def test_delete_user_bad_cred(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.delete(
-        f"/user/?user_id={user_data["user_id"]}",
+        f"{USER_URL}?user_id={user_data["user_id"]}",
         headers=await create_test_auth_headers_for_user(user_data["email"] + "a"),
     )
     assert resp.status_code == 401
@@ -116,7 +117,7 @@ async def test_delete_user_unauth(client, create_user_in_database):
     bad_auth_headers = await create_test_auth_headers_for_user(user_data["email"])
     bad_auth_headers["Authorization"] += "a"
     resp = client.delete(
-        f"/user/?user_id={user_data["user_id"]}",
+        f"{USER_URL}?user_id={user_data["user_id"]}",
         headers=bad_auth_headers,
     )
     assert resp.status_code == 401
@@ -134,7 +135,7 @@ async def test_delete_user_no_jwt(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.delete(
-        f"/user/?user_id={user_data["user_id"]}",
+        f"{USER_URL}?user_id={user_data["user_id"]}",
     )
     assert resp.status_code == 401
     assert resp.json() == {"detail": "Not authenticated"}
@@ -172,7 +173,7 @@ async def test_delete_user_by_privilage_roles(
     await create_user_in_database(user_data_for_deletion)
     await create_user_in_database(user_who_delete)
     resp = client.delete(
-        f"/user/?user_id={user_data_for_deletion['user_id']}",
+        f"{USER_URL}?user_id={user_data_for_deletion['user_id']}",
         headers=await create_test_auth_headers_for_user(user_who_delete["email"]),
     )
     assert resp.status_code == 200
@@ -272,7 +273,7 @@ async def test_delete_another_user_error(
     await create_user_in_database(user_for_deletion)
     await create_user_in_database(user_who_delete)
     reps = client.delete(
-        f"/user/?user_id={user_for_deletion['user_id']}",
+        f"{USER_URL}?user_id={user_for_deletion['user_id']}",
         headers=await create_test_auth_headers_for_user(user_who_delete["email"]),
     )
     assert reps.status_code == 403
@@ -294,7 +295,7 @@ async def test_reject_delete_superadmin(
     }
     await create_user_in_database(user_data_for_deletion)
     resp = client.delete(
-        f"/user/?user_id={user_data_for_deletion["user_id"]}",
+        f"{USER_URL}?user_id={user_data_for_deletion["user_id"]}",
         headers=await create_test_auth_headers_for_user(
             user_data_for_deletion["email"]
         ),

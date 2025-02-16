@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from tests.conftest import create_test_auth_headers_for_user
+from tests.conftest import USER_URL
 from utils.hashing import Hasher
 from utils.roles import PortalRole
 
@@ -26,7 +27,7 @@ async def test_update_user(client, create_user_in_database, get_user_from_databa
     }
     await create_user_in_database(user_data)
     resp = client.patch(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
         json=user_data_updated,
     )
@@ -89,7 +90,7 @@ async def test_update_only_one_user(
     await asyncio.gather(*created_request)
 
     resp = client.patch(
-        f"/user/?user_id={user1['user_id']}",
+        f"{USER_URL}?user_id={user1['user_id']}",
         headers=await create_test_auth_headers_for_user(user1["email"]),
         json=user1_update_data,
     )
@@ -284,7 +285,7 @@ async def test_update_user_validation_error(
     }
     await create_user_in_database(user_data)
     resp = client.patch(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
         json=user_data_updated,
     )
@@ -310,7 +311,7 @@ async def test_update_user_id_validation_error(client, create_user_in_database):
         "email": "cheburek@kek.com",
     }
     resp = client.patch(
-        "/user/?user_id=123",
+        f"{USER_URL}?user_id=123",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
         json=user_data_updated,
     )
@@ -350,7 +351,7 @@ async def test_update_user_not_found_error(client, create_user_in_database):
     }
     user_id_for_finding = uuid4()
     resp = client.patch(
-        f"/user/?user_id={user_id_for_finding}",
+        f"{USER_URL}?user_id={user_id_for_finding}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
         json=user_data_updated,
     )
@@ -385,7 +386,7 @@ async def test_update_user_dublicate_email_error(client, create_user_in_database
         "email": user_data2["email"],
     }
     resp = client.patch(
-        f"/user/?user_id={user_data1['user_id']}",
+        f"{USER_URL}?user_id={user_data1['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data1["email"]),
         json=user_data_dublicate_email,
     )
@@ -414,7 +415,7 @@ async def test_get_user_bad_cred(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.patch(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"] + "a"),
         json=user_data_updated,
     )
@@ -442,7 +443,7 @@ async def test_get_user_unauth(client, create_user_in_database):
     bad_auth_headers = await create_test_auth_headers_for_user(user_data["email"])
     bad_auth_headers["Authorization"] += "a"
     resp = client.patch(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         headers=bad_auth_headers,
         json=user_data_updated,
     )
@@ -468,7 +469,7 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.patch(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         json=user_data_updated,
     )
     assert resp.status_code == 401
@@ -515,7 +516,7 @@ async def test_update_user_by_privilage_roles(
     await create_user_in_database(user_data_for_updating)
     await create_user_in_database(user_who_update)
     resp = client.patch(
-        f"/user/?user_id={user_data_for_updating['user_id']}",
+        f"{USER_URL}?user_id={user_data_for_updating['user_id']}",
         json=user_data_updated,
         headers=await create_test_auth_headers_for_user(user_who_update["email"]),
     )
@@ -628,7 +629,7 @@ async def test_update_another_user_error(
     await create_user_in_database(user_data_for_updating)
     await create_user_in_database(user_who_update)
     reps = client.patch(
-        f"/user/?user_id={user_data_for_updating['user_id']}",
+        f"{USER_URL}?user_id={user_data_for_updating['user_id']}",
         json=user_data_updated,
         headers=await create_test_auth_headers_for_user(user_who_update["email"]),
     )
