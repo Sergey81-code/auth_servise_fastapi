@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 
 import settings
-from tests.conftest import assert_token_lifetime
+from tests.conftest import LOGIN_URL, assert_token_lifetime
 from tests.conftest import create_test_jwt_token_for_user
 from tests.conftest import get_test_data_from_jwt_token
 
@@ -22,7 +22,7 @@ async def test_user_login(client, create_user_in_database):
         "username": user_data["email"],
         "password": user_data["password"],
     }
-    resp = client.post("/login", data=user_data_for_login)
+    resp = client.post(f"{LOGIN_URL}", data=user_data_for_login)
     assert resp.status_code == 200
 
     resp_data = resp.json()
@@ -58,7 +58,7 @@ async def test_create_access_token_by_refresh_token(client, create_user_in_datab
     }
     await create_user_in_database(user_data)
     refresh_token = await create_test_jwt_token_for_user(user_data["email"], "refresh")
-    resp = client.post("login/token", cookies={"refresh_token": refresh_token})
+    resp = client.post(f"{LOGIN_URL}token", cookies={"refresh_token": refresh_token})
     assert resp.status_code == 200
 
     resp_data = resp.json()
@@ -163,7 +163,7 @@ async def test_user_login_validation_error(
         "is_active": True,
     }
     await create_user_in_database(user_data)
-    resp = client.post("/login", data=login_data)
+    resp = client.post(f"{LOGIN_URL}", data=login_data)
 
     assert resp.status_code == expected_status_code
     assert resp.json() == expected_detail
@@ -200,7 +200,7 @@ async def test_create_access_token_by_refresh_token_error(
         "is_active": True,
     }
     await create_user_in_database(user_data)
-    resp = client.post("login/token", cookies={"refresh_token": refresh_token})
+    resp = client.post(f"{LOGIN_URL}token", cookies={"refresh_token": refresh_token})
 
     assert resp.status_code == expected_status_code
     assert resp.json() == expected_detail

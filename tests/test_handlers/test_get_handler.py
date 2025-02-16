@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from tests.conftest import create_test_auth_headers_for_user
+from tests.conftest import USER_URL, create_test_auth_headers_for_user
 from utils.roles import PortalRole
 
 
@@ -17,7 +17,7 @@ async def test_get_user(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.get(
-        f"/user/?user_id={user_data['user_id']}",
+        f"{USER_URL}?user_id={user_data['user_id']}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 200
@@ -40,7 +40,7 @@ async def test_get_user_id_validation_error(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.get(
-        "/user/?user_id=123",
+        f"{USER_URL}?user_id=123",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 422
@@ -73,7 +73,7 @@ async def test_get_user_not_found_error(client, create_user_in_database):
     user_id_for_finding = uuid4()
     await create_user_in_database(user_data)
     resp = client.get(
-        f"/user/?user_id={user_id_for_finding}",
+        f"{USER_URL}?user_id={user_id_for_finding}",
         headers=await create_test_auth_headers_for_user(user_data["email"]),
     )
     assert resp.status_code == 404
@@ -94,7 +94,7 @@ async def test_get_user_bad_cred(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.get(
-        f"/user/?user_id={user_data["user_id"]}",
+        f"{USER_URL}?user_id={user_data["user_id"]}",
         headers=await create_test_auth_headers_for_user(user_data["email"] + "a"),
     )
     assert resp.status_code == 401
@@ -114,7 +114,7 @@ async def test_get_user_unauth(client, create_user_in_database):
     bad_auth_headers = await create_test_auth_headers_for_user(user_data["email"])
     bad_auth_headers["Authorization"] += "a"
     resp = client.get(
-        f"/user/?user_id={user_data["user_id"]}",
+        f"{USER_URL}?user_id={user_data["user_id"]}",
         headers=bad_auth_headers,
     )
     assert resp.status_code == 401
@@ -132,7 +132,7 @@ async def test_get_user_no_jwt(client, create_user_in_database):
     }
     await create_user_in_database(user_data)
     resp = client.get(
-        f"/user/?user_id={user_data["user_id"]}",
+        f"{USER_URL}?user_id={user_data["user_id"]}",
     )
     assert resp.status_code == 401
     assert resp.json() == {"detail": "Not authenticated"}
@@ -170,7 +170,7 @@ async def test_get_user_by_privilage_roles(
     await create_user_in_database(user_data_for_getting)
     await create_user_in_database(user_who_get)
     resp = client.get(
-        f"/user/?user_id={user_data_for_getting['user_id']}",
+        f"{USER_URL}?user_id={user_data_for_getting['user_id']}",
         headers=await create_test_auth_headers_for_user(user_who_get["email"]),
     )
     assert resp.status_code == 200
@@ -268,7 +268,7 @@ async def test_get_another_user_error(
     await create_user_in_database(user_for_getting)
     await create_user_in_database(user_who_get)
     reps = client.get(
-        f"/user/?user_id={user_for_getting['user_id']}",
+        f"{USER_URL}?user_id={user_for_getting['user_id']}",
         headers=await create_test_auth_headers_for_user(user_who_get["email"]),
     )
     assert reps.status_code == 403
