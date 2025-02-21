@@ -6,10 +6,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.config import get_settings
-from api.v1.auth.schemas import Token
-from api.core.exceptions import AppExceptions
-from api.v1.auth.services.AuthService import AuthService
 from api.core.dependencies import get_session
+from api.core.exceptions import AppExceptions
+from api.v1.auth.schemas import Token
+from api.v1.auth.services.AuthService import AuthService
 
 
 login_router = APIRouter()

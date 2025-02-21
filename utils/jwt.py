@@ -38,9 +38,7 @@ class JWT:
         try:
             payload = jwt.decode(token, token_key, algorithms=[settings.ALGORITHM])
             if "sub" not in payload.keys():
-                AppExceptions.unauthorized_exception(
-                    "Could not validate credentials"
-                )
+                AppExceptions.unauthorized_exception("Could not validate credentials")
         except JWTError:
             AppExceptions.unauthorized_exception("Could not validate credentials")
         return payload

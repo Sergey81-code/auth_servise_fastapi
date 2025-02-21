@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from api.v1.auth.handlers import login_router
 from api.v1.users.handlers import user_router
 

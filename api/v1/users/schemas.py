@@ -49,7 +49,9 @@ class UserCreate(BaseModel):
     @field_validator("password")
     def validate_password(cls, value):
         if not PASSWORD_REGEX.match(value):
-            AppExceptions.validation_exception("Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.")
+            AppExceptions.validation_exception(
+                "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            )
         return value
 
 
@@ -87,5 +89,7 @@ class UpdateUserRequest(BaseModel):
     @field_validator("new_password")
     def validate_new_password(cls, value):
         if not PASSWORD_REGEX.match(value):
-            AppExceptions.validation_exception("Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.")
+            AppExceptions.validation_exception(
+                "Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters."
+            )
         return value

@@ -51,7 +51,10 @@ async def test_create_user_dublicate_email_error(client, create_user_in_database
     await create_user_in_database(user_data)
     resp = client.post(f"{USER_URL}", json=user_data_same_email)
     assert resp.status_code == 409
-    assert resp.json()['detail'] == f"User with this email {user_data_same_email['email']} already exists."
+    assert (
+        resp.json()["detail"]
+        == f"User with this email {user_data_same_email['email']} already exists."
+    )
 
 
 @pytest.mark.parametrize(

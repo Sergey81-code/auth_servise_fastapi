@@ -1,6 +1,9 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
+
 import settings
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Auth Service"
@@ -16,6 +19,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = settings.ALGORITHM
     ACCESS_TOKEN_EXPIRE_MINUTES: int = settings.ACCESS_TOKEN_EXPIRE_MINUTES
     REFRESH_TOKEN_EXPIRE_DAYS: int = settings.REFRESH_TOKEN_EXPIRE_DAYS
+
 
 @lru_cache()
 def get_settings():

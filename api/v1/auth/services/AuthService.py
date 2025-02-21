@@ -1,12 +1,10 @@
-from datetime import timedelta
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppExceptions
-from utils.jwt import JWT
 from api.v1.users.actions import get_user_by_email_action
 from db.models import User
 from utils.hashing import Hasher
+from utils.jwt import JWT
 
 
 class AuthService:
@@ -19,9 +17,7 @@ class AuthService:
     async def create(cls, email: str, password: str, session: AsyncSession):
         user = await cls._authenticate_user(email, password, session)
         if not user:
-            AppExceptions.unauthorized_exception(
-                "Incorrect username or password"
-            )
+            AppExceptions.unauthorized_exception("Incorrect username or password")
         return cls(user, session)
 
     @staticmethod
@@ -37,7 +33,7 @@ class AuthService:
     async def create_access_token(self):
         return await JWT.create_jwt_token(
             data={"sub": self.user.email, "other_custom_data": [1, 2, 3, 4]},
-            token_type="access"
+            token_type="access",
         )
 
     async def create_refresh_token(self):

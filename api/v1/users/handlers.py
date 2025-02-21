@@ -5,6 +5,9 @@ from fastapi import Depends
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.core.dependencies import get_current_user_from_access_token as get_current_user
+from api.core.dependencies import get_session
+from api.core.exceptions import AppExceptions
 from api.v1.users.actions import activate_user_action
 from api.v1.users.actions import check_user_permissions
 from api.v1.users.actions import create_new_user_action
@@ -20,11 +23,7 @@ from api.v1.users.schemas import UpdatedUserResponse
 from api.v1.users.schemas import UpdateUserRequest
 from api.v1.users.schemas import UserCreate
 from db.models import User
-from api.core.dependencies import get_session
 from utils.decorators import only_superadmin
-from api.core.exceptions import AppExceptions
-
-from api.core.dependencies import get_current_user_from_access_token as get_current_user
 
 user_router = APIRouter()
 

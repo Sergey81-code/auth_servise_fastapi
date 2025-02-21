@@ -17,10 +17,10 @@ from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
 
 from api.core.config import get_settings
-from utils.jwt import JWT
 from api.core.dependencies import get_session
 from main import app
 from utils.hashing import Hasher
+from utils.jwt import JWT
 from utils.roles import PortalRole
 
 
@@ -140,9 +140,7 @@ async def create_user_in_database(asyncpg_pool):
 
 
 async def create_test_jwt_token_for_user(email: str, token_type) -> str:
-    token = await JWT.create_jwt_token(
-        data={"sub": email}, token_type=token_type
-    )
+    token = await JWT.create_jwt_token(data={"sub": email}, token_type=token_type)
     return token
 
 
