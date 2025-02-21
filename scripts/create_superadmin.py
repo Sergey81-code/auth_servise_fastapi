@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from uuid import uuid4
 from db.models import User
-from db.session import get_session
+from api.core.dependencies import get_session
 from utils.hashing import Hasher
 from utils.roles import PortalRole
 

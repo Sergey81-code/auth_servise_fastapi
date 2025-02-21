@@ -16,16 +16,18 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from starlette.testclient import TestClient
 
-import settings
-from api.auth.services.JWTService import JWTService
-from db.session import get_session
+from api.core.config import get_settings
+from utils.jwt import JWT
+from api.core.dependencies import get_session
 from main import app
 from utils.hashing import Hasher
 from utils.roles import PortalRole
 
 
-USER_URL = "/users/"
-LOGIN_URL = "/login/"
+settings = get_settings()
+
+USER_URL = "/v1/users/"
+LOGIN_URL = "/v1/login/"
 
 test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
 
@@ -138,7 +140,7 @@ async def create_user_in_database(asyncpg_pool):
 
 
 async def create_test_jwt_token_for_user(email: str, token_type) -> str:
-    token = await JWTService.create_jwt_token(
+    token = await JWT.create_jwt_token(
         data={"sub": email}, token_type=token_type
     )
     return token

@@ -2,10 +2,11 @@ import re
 import uuid
 from typing import Optional
 
-from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import field_validator
+
+from api.core.exceptions import AppExceptions
 
 
 LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
@@ -36,26 +37,19 @@ class UserCreate(BaseModel):
     @field_validator("name")
     def validate_name(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(
-                status_code=422, detail="Name should contains only letters"
-            )
+            AppExceptions.validation_exception("Name should contains only letters")
         return value
 
     @field_validator("surname")
     def validate_surname(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(
-                status_code=422, detail="Surname should contains only letters"
-            )
+            AppExceptions.validation_exception("Surname should contains only letters")
         return value
 
     @field_validator("password")
     def validate_password(cls, value):
         if not PASSWORD_REGEX.match(value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.",
-            )
+            AppExceptions.validation_exception("Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.")
         return value
 
 
@@ -81,24 +75,17 @@ class UpdateUserRequest(BaseModel):
     @field_validator("name")
     def validator_name(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(
-                status_code=422, detail="Name should contains only letters"
-            )
+            AppExceptions.validation_exception("Name should contains only letters")
         return value
 
     @field_validator("surname")
     def validator_surname(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(
-                status_code=422, detail="Surname should contains only letters"
-            )
+            AppExceptions.validation_exception("Surname should contains only letters")
         return value
 
     @field_validator("new_password")
     def validate_new_password(cls, value):
         if not PASSWORD_REGEX.match(value):
-            raise HTTPException(
-                status_code=422,
-                detail="Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.",
-            )
+            AppExceptions.validation_exception("Password must be 8-16 characters long, contain uppercase and lowercase letters, numbers, and special characters.")
         return value

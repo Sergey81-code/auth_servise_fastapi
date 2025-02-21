@@ -1,10 +1,10 @@
 up:
-	docker compose -f docker-compose-local.yaml up -d
+	docker compose -f docker-compose/docker-compose-local.yaml up -d
 down:
-	docker compose -f docker-compose-local.yaml down && docker network prune --force
+	docker compose -f docker-compose/docker-compose-local.yaml down && docker network prune --force
 up_ci:
-	docker compose -f docker-compose-ci.yaml up -d
+	docker compose -f docker-compose/docker-compose-ci.yaml up -d
 up_ci_rebuild:
-	docker compose -f docker-compose-ci.yaml up --build -d
+	docker compose -f docker-compose/docker-compose-ci.yaml up --build -d
 down_ci:
-	docker compose -f docker-compose-ci.yaml down --remove-orphans
+	docker compose -f docker-compose/docker-compose-ci.yaml down --remove-orphans

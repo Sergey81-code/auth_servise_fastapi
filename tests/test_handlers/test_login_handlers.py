@@ -2,11 +2,13 @@ from uuid import uuid4
 
 import pytest
 
-import settings
+from api.core.config import get_settings
 from tests.conftest import assert_token_lifetime
 from tests.conftest import create_test_jwt_token_for_user
 from tests.conftest import get_test_data_from_jwt_token
 from tests.conftest import LOGIN_URL
+
+settings = get_settings()
 
 
 async def test_user_login(client, create_user_in_database):

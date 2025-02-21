@@ -1,22 +1,22 @@
 import uvicorn
-from fastapi import FastAPI
-from fastapi.routing import APIRouter
+from fastapi import FastAPI, HTTPException
+from api.routers import router
 
-import settings
-from api.auth.handlers import login_router
-from api.users.handlers import user_router
+from api.core.config import get_settings
+from api.core.middlewares import LoggingMiddleware
+
+from api.core.exceptions import AppExceptions, http_exception_handler
+
+settings = get_settings()
 
 app = FastAPI(title="my-fastapi")
-
-main_api_router = APIRouter()
-
-main_api_router.include_router(user_router, prefix="/users", tags=["users"])
-main_api_router.include_router(login_router, prefix="/login", tags=["login"])
-app.include_router(main_api_router)
-
+app.add_middleware(LoggingMiddleware)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.include_router(router)
 
 @app.get("/")
 async def ping():
+    AppExceptions.forbidden_exception()
     return {"Success": True}
 
 

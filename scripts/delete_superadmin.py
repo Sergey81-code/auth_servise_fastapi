@@ -8,7 +8,7 @@ from sqlalchemy import select
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from db.models import User
-from db.session import get_session
+from api.core.dependencies import get_session
 
 
 async def prompt_for_superadmin_credentials():

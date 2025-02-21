@@ -5,14 +5,16 @@ from fastapi import Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import settings
-from api.auth.schemas import Token
-from api.auth.services.AuthExceptionService import AuthExceptionService
-from api.auth.services.AuthService import AuthService
-from db.session import get_session
+from api.core.config import get_settings
+from api.v1.auth.schemas import Token
+from api.core.exceptions import AppExceptions
+from api.v1.auth.services.AuthService import AuthService
+from api.core.dependencies import get_session
 
 
 login_router = APIRouter()
+
+settings = get_settings()
 
 
 @login_router.post("/", response_model=Token)
@@ -44,7 +46,7 @@ async def login_for_get_tokens(
 async def create_new_access_token(request: Request):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
-        AuthExceptionService.unauthorized_exception("Could not validate credentials")
+        AppExceptions.unauthorized_exception("Could not validate credentials")
 
     access_token = await AuthService.create_access_token_from_refresh(refresh_token)
     return {"access_token": access_token, "token_type": "bearer"}

@@ -1,18 +1,19 @@
 from uuid import UUID
 
-from fastapi import HTTPException
-from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.users.schemas import UpdateUserRequest
-from api.users.schemas import UserCreate
+from api.v1.users.schemas import UpdateUserRequest
+from api.v1.users.schemas import UserCreate
 from db.dals import UserDAL
 from db.models import User
 from utils.hashing import Hasher
 from utils.roles import PortalRole
+from api.core.exceptions import AppExceptions
 
 
 async def create_new_user_action(body: UserCreate, session: AsyncSession) -> User:
+    if await get_user_by_email_action(body.email, session) != None:
+        AppExceptions.conflict_exception(f"User with this email {body.email} already exists.")
     async with session.begin():
         return await UserDAL(session).create_user(
             name=body.name,
@@ -47,16 +48,10 @@ async def process_user_update_request_action(
     if not old_password or not Hasher.verify_password(
         old_password, user.hashed_password
     ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password",
-        )
+        AppExceptions.unauthorized_exception("Incorrect password")
 
     if not updated_params:
-        raise HTTPException(
-            status_code=422,
-            detail="At least one parameter for user update info should be proveded",
-        )
+        AppExceptions.validation_exception("At least one parameter for user update info should be proveded")
 
     if new_password := updated_params.pop("new_password", None):
         updated_params["hashed_password"] = Hasher.get_password_hash(new_password)
@@ -89,10 +84,8 @@ async def fetch_user_or_raise(
     target_user = await get_user_by_id_action(user_id, session)
     if target_user is None:
         if current_user.is_admin or current_user.is_superadmin:
-            raise HTTPException(
-                status_code=404, detail=f"User with id {user_id} not found."
-            )
-        raise HTTPException(status_code=403, detail="Forbidden")
+            AppExceptions.not_found_exception(f"User with id {user_id} not found.")
+        AppExceptions.forbidden_exception()
     return target_user
 
 
@@ -112,15 +105,10 @@ async def grant_admin_privilege_action(
     user_id: UUID, current_user: User, session: AsyncSession
 ) -> UUID | None:
     if current_user.user_id == user_id:
-        raise HTTPException(
-            status_code=400, detail="Cannot manage privileges of itself."
-        )
+        AppExceptions.bad_request_exception("Cannot manage privileges of itself.")
     user_for_promotion = await fetch_user_or_raise(user_id, current_user, session)
     if user_for_promotion.is_admin or user_for_promotion.is_superadmin:
-        raise HTTPException(
-            status_code=409,
-            detail=f"User with email {user_for_promotion.email} already promoted to admin / superadmin",
-        )
+        AppExceptions.conflict_exception(f"User with email {user_for_promotion.email} already promoted to admin / superadmin")
     return await update_user_action(
         user_id=user_id,
         updated_user_params={"roles": user_for_promotion.extend_roles_with_admin()},
@@ -132,15 +120,10 @@ async def revoke_admin_privilege_action(
     user_id: UUID, current_user: User, session: AsyncSession
 ) -> UUID | None:
     if current_user.user_id == user_id:
-        raise HTTPException(
-            status_code=400, detail="Cannot manage privileges of itself."
-        )
+        AppExceptions.bad_request_exception("Cannot manage privileges of itself.")
     user_for_promotion = await fetch_user_or_raise(user_id, current_user, session)
     if not user_for_promotion.is_admin:
-        raise HTTPException(
-            status_code=409,
-            detail=f"User with email {user_for_promotion.email} has no admin privileges",
-        )
+        AppExceptions.conflict_exception(f"User with email {user_for_promotion.email} has no admin privileges")
     return await update_user_action(
         user_id=user_id,
         updated_user_params={"roles": user_for_promotion.exclude_admin_role()},

@@ -3,11 +3,13 @@ import datetime
 from jose import jwt
 from jose import JWTError
 
-import settings
-from api.auth.services.AuthExceptionService import AuthExceptionService
+from api.core.config import get_settings
+from api.core.exceptions import AppExceptions
+
+settings = get_settings()
 
 
-class JWTService:
+class JWT:
 
     @staticmethod
     async def create_jwt_token(
@@ -36,9 +38,9 @@ class JWTService:
         try:
             payload = jwt.decode(token, token_key, algorithms=[settings.ALGORITHM])
             if "sub" not in payload.keys():
-                AuthExceptionService.credentials_exception(
+                AppExceptions.unauthorized_exception(
                     "Could not validate credentials"
                 )
         except JWTError:
-            AuthExceptionService.credentials_exception("Could not validate credentials")
+            AppExceptions.unauthorized_exception("Could not validate credentials")
         return payload
