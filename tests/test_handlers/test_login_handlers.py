@@ -46,7 +46,6 @@ async def test_user_login(client, create_user_in_database):
     assert resp_data_from_access["roles"] == user_data["roles"]
     assert resp_data_from_refresh["sub"] == user_data["email"]
 
-
     assert await assert_token_lifetime(
         resp_data_from_access, settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )

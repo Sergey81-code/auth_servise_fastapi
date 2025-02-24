@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.core.dependencies import get_session
 from api.core.exceptions import AppExceptions
 from api.v1.users.actions import get_user_by_email_action
 from db.models import User
@@ -33,7 +32,11 @@ class AuthService:
 
     async def create_access_token(self):
         return await JWT.create_jwt_token(
-            data={"sub": self.user.email, "user_id": str(self.user.user_id), "roles": self.user.roles},
+            data={
+                "sub": self.user.email,
+                "user_id": str(self.user.user_id),
+                "roles": self.user.roles,
+            },
             token_type="access",
         )
 
@@ -44,7 +47,9 @@ class AuthService:
         )
 
     @staticmethod
-    async def create_access_token_from_refresh(refresh_token: str, session: AsyncSession):
+    async def create_access_token_from_refresh(
+        refresh_token: str, session: AsyncSession
+    ):
         payload = await JWT.decode_jwt_token(refresh_token, "refresh")
         email: str = payload.get("sub")
         user: User = await get_user_by_email_action(email, session)

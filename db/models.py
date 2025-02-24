@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ARRAY, String
+from sqlalchemy import ARRAY
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
@@ -15,14 +15,15 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "users"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     name: Mapped[str] = mapped_column(nullable=False)
     surname: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False, unique=True)
     is_active: Mapped[bool] = mapped_column(default=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     roles: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
-
 
     # user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # name = Column(String, nullable=False)
