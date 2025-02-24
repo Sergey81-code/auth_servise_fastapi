@@ -26,6 +26,10 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+def include_object(object, name, type_, reflected, compare_to):
+    if type_ == 'table':
+        return name in target_metadata.tables
+    return True
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -63,9 +67,15 @@ def run_migrations_online() -> None:
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-
+    
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, 
+            target_metadata=target_metadata,
+            version_table='alembic_version',
+            сompare_type=True,
+            include_object=include_object,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

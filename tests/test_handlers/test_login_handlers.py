@@ -7,6 +7,7 @@ from tests.conftest import assert_token_lifetime
 from tests.conftest import create_test_jwt_token_for_user
 from tests.conftest import get_test_data_from_jwt_token
 from tests.conftest import LOGIN_URL
+from utils.roles import PortalRole
 
 settings = get_settings()
 
@@ -19,6 +20,7 @@ async def test_user_login(client, create_user_in_database):
         "email": "lol@kek.com",
         "password": "Abcd12!@",
         "is_active": True,
+        "roles": [PortalRole.ROLE_PORTAL_USER],
     }
     await create_user_in_database(user_data)
     user_data_for_login = {
@@ -40,7 +42,10 @@ async def test_user_login(client, create_user_in_database):
     )
 
     assert resp_data_from_access["sub"] == user_data["email"]
+    assert resp_data_from_access["user_id"] == str(user_data["user_id"])
+    assert resp_data_from_access["roles"] == user_data["roles"]
     assert resp_data_from_refresh["sub"] == user_data["email"]
+
 
     assert await assert_token_lifetime(
         resp_data_from_access, settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -58,6 +63,7 @@ async def test_create_access_token_by_refresh_token(client, create_user_in_datab
         "email": "lol@kek.com",
         "password": "Abcd12!@",
         "is_active": True,
+        "roles": [PortalRole.ROLE_PORTAL_USER],
     }
     await create_user_in_database(user_data)
     refresh_token = await create_test_jwt_token_for_user(user_data["email"], "refresh")
@@ -71,6 +77,8 @@ async def test_create_access_token_by_refresh_token(client, create_user_in_datab
         resp_data["access_token"], "access"
     )
     assert resp_data_from_access["sub"] == user_data["email"]
+    assert resp_data_from_access["user_id"] == str(user_data["user_id"])
+    assert resp_data_from_access["roles"] == user_data["roles"]
     assert await assert_token_lifetime(
         resp_data_from_access, settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )

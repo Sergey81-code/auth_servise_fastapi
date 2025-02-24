@@ -43,10 +43,10 @@ async def login_for_get_tokens(
 
 
 @login_router.post("/token", response_model=Token)
-async def create_new_access_token(request: Request):
+async def create_new_access_token(request: Request, session: AsyncSession = Depends(get_session)):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         AppExceptions.unauthorized_exception("Could not validate credentials")
 
-    access_token = await AuthService.create_access_token_from_refresh(refresh_token)
+    access_token = await AuthService.create_access_token_from_refresh(refresh_token, session)
     return {"access_token": access_token, "token_type": "bearer"}
