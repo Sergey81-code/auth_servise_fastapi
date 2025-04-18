@@ -156,6 +156,6 @@ async def revoke_admin_privilege(
             current_user=current_user,
             session=session,
         )
-    except IntegrityError as err:
-        AppExceptions.service_unavailable_exception(f"Database error: {err}")
+    except IntegrityError:
+        AppExceptions.service_unavailable_exception("Database error.")
     return UpdatedUserResponse(updated_user_id=updated_user_id)

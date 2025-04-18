@@ -10,11 +10,11 @@ import pytest
 import sqlalchemy
 from alembic import command
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-from starlette.testclient import TestClient
 
 from api.core.config import get_settings
 from api.core.dependencies import get_session
@@ -29,12 +29,6 @@ settings = get_settings()
 USER_URL = "/v1/users/"
 LOGIN_URL = "/v1/login/"
 
-test_engine = create_async_engine(settings.TEST_DATABASE_URL, future=True, echo=True)
-
-test_async_session = sessionmaker(
-    test_engine, expire_on_commit=False, class_=AsyncSession
-)
-
 CLEAN_TABLES = [
     "users",
 ]
@@ -42,9 +36,7 @@ CLEAN_TABLES = [
 
 @pytest.fixture(scope="session")
 def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+    return asyncio.get_event_loop()
 
 
 @pytest.fixture(scope="session", autouse=True)

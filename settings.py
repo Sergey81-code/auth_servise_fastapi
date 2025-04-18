@@ -2,11 +2,16 @@ from envparse import Env
 
 env = Env()
 
+# REAL_DATABASE_URL = env.str(
+#     "REAL_DATABASE_URL",
+#     default="postgresql+asyncpg://postgres:postgres@host.docker.internal:5431/postgres",
+# )
+
 REAL_DATABASE_URL = env.str(
     "REAL_DATABASE_URL",
-    default="postgresql+asyncpg://postgres:postgres@host.docker.internal:5431/postgres",
+    default="postgresql+asyncpg://postgres:postgres@localhost:5431/postgres",
 )
-APP_PORT = env.int("APP_PORT", default=8000)
+APP_PORT = env.int("APP_PORT", default=8001)
 
 SECRET_KEY_FOR_ACCESS: str = env.str(
     "SECRET_KEY_FOR_ACCESS", default="your-strong-access-secret-key"

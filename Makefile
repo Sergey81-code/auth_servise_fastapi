@@ -1,10 +1,16 @@
+DC = docker compose
+APP_LOCAL_FILE = docker_compose/docker-compose-local.yaml
+APP_CI_FILE = docker_compose/docker-compose-local.yaml
+
+
+
 up:
-	docker compose -f docker-compose/docker-compose-local.yaml up -d
+	${DC} -f ${APP_LOCAL_FILE} up -d
 down:
-	docker compose -f docker-compose/docker-compose-local.yaml down && docker network prune --force
+	${DC} -f ${APP_LOCAL_FILE} down && docker network prune --force
 up_ci:
-	docker compose -f docker-compose/docker-compose-ci.yaml up -d
+	${DC} -f ${APP_CI_FILE} up -d
 up_ci_rebuild:
-	docker compose -f docker-compose/docker-compose-ci.yaml up --build -d
+	${DC} -f ${APP_CI_FILE} up --build -d
 down_ci:
-	docker compose -f docker-compose/docker-compose-ci.yaml down --remove-orphans
+	${DC} -f ${APP_CI_FILE} down --remove-orphans
